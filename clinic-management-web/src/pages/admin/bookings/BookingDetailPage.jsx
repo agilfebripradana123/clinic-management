@@ -10,6 +10,13 @@ import { DAY_LABELS } from "../../../utils/day";
 import { formatDate } from "../../../utils/format";
 import useRoleBase from "../../../hooks/useRoleBase";
 
+const statusMeta = {
+  pending: { label: "Menunggu", badge: "bg-yellow-100 text-yellow-700" },
+  confirmed: { label: "Dikonfirmasi", badge: "bg-green-100 text-green-700" },
+  completed: { label: "Selesai", badge: "bg-green-100 text-green-700" },
+  cancelled: { label: "Dibatalkan", badge: "bg-red-100 text-red-700" },
+};
+
 export default function BookingDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -56,14 +63,11 @@ export default function BookingDetailPage() {
 
               <span
                 className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                  booking.status === "confirmed"
-                    ? "bg-green-100 text-green-700"
-                    : booking.status === "cancelled"
-                      ? "bg-red-100 text-red-700"
-                      : "bg-yellow-100 text-yellow-700"
+                  (statusMeta[booking.status] || {}).badge ||
+                  "bg-slate-100 text-slate-700"
                 }`}
               >
-                {booking.status}
+                {(statusMeta[booking.status] || {}).label || booking.status}
               </span>
             </div>
 

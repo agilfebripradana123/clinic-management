@@ -74,6 +74,27 @@ export default function MedicalRecordFormPage() {
         prescription: data.prescription || "",
         notes: data.notes || "",
       });
+
+      // Saat edit, booking sudah punya rekam medis sehingga tidak ada di
+      // /available-bookings. Ambil detail booking langsung agar dropdown
+      // terisi & kartu info pasien/dokter tampil.
+      if (data.booking_id) {
+        try {
+          const booking = await api.get(`/bookings/${data.booking_id}`);
+
+          const currentBooking = booking.data;
+
+          setBookings((current) => {
+            const exists = current.some(
+              (item) => Number(item.id) === Number(currentBooking.id),
+            );
+
+            return exists ? current : [currentBooking, ...current];
+          });
+        } catch (error) {
+          console.error(error);
+        }
+      }
     } catch (error) {
       toast.error("Gagal mengambil data rekam medis.");
     }

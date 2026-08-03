@@ -97,7 +97,7 @@ class DoctorController extends Controller
     {
         $validated = $request->validate([
             'name'      => 'required|string|max:255',
-            'email'     => 'required|email|unique:users,email,' . $doctor->user_id,
+            'email'     => 'sometimes|email|unique:users,email,' . $doctor->user_id,
             'password'  => 'nullable|min:8',
             'specialty' => 'required|string|max:255',
             'phone'     => 'required|string|max:20',
@@ -112,9 +112,13 @@ class DoctorController extends Controller
             // Update data user
             // ==========================
             $userData = [
-                'name'  => $validated['name'],
-                'email' => $validated['email'],
+                'name' => $validated['name'],
             ];
+
+            // Email hanya diubah jika dikirim
+            if (!empty($validated['email'])) {
+                $userData['email'] = $validated['email'];
+            }
 
             // Password hanya diubah jika diisi
             if (!empty($validated['password'])) {

@@ -141,6 +141,15 @@ export default function Login() {
           </Button>
         </form>
 
+        <div className="mt-4 text-center">
+          <Link
+            to="/forgot-password"
+            className="text-sm font-semibold text-cyan-600 hover:underline"
+          >
+            Lupa Password?
+          </Link>
+        </div>
+
         <div
           className="mt-5 text-center text-sm"
           style={{ color: colors.textSecondary }}

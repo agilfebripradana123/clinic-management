@@ -3,16 +3,15 @@ export default function Card({ children, className = "" }) {
     <div
       className={`
         rounded-2xl
-        border-2
+        border
         border-slate-200
         bg-white
         p-6
         shadow-sm
-        transition-all
-        duration-300
-        hover:-translate-y-1
-        hover:border-cyan-400
-        hover:shadow-xl
+        transition
+        duration-200
+        ease-out
+        hover:border-slate-300
         ${className}
       `}
     >

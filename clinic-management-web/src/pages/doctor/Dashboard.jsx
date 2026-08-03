@@ -84,10 +84,10 @@ export default function Dashboard() {
       title="Dashboard Dokter"
       subtitle="Selamat datang di Sistem Klinik Management"
     >
-      <Card className="bg-gradient-to-r from-cyan-600 via-sky-600 to-blue-600 p-8 text-white">
-        <h1 className="text-3xl font-black">
-          Selamat Datang,
-          <span className="ml-2">{user?.name ?? "Dokter"} 👋</span>
+      <Card className="bg-gradient-to-r from-cyan-600 via-sky-600 to-blue-600 p-6 text-white md:p-8">
+        <h1 className="flex flex-wrap items-center gap-2 text-2xl font-black md:text-3xl">
+          <span>Selamat Datang,</span>
+          <span className="ml-2">{user?.name ?? "Dokter"}</span>
         </h1>
 
         <p className="mt-3 max-w-2xl text-cyan-100">

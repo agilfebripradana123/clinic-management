@@ -114,24 +114,33 @@ export default function PatientFormPage() {
                 />
               </div>
 
-              <Input
-                label="Email"
-                type="email"
-                value={form.email}
-                onChange={handleChange("email")}
-                placeholder="pasien@clinic.com"
-              />
-              <Input
-                label="Password"
-                type="password"
-                value={form.password}
-                onChange={handleChange("password")}
-                placeholder={
-                  isEditMode
-                    ? "Kosongkan jika tidak ingin mengubah password"
-                    : "Minimal 8 karakter"
-                }
-              />
+              {isEditMode ? (
+                <Input
+                  label="Email"
+                  type="email"
+                  value={form.email}
+                  disabled
+                  placeholder="pasien@clinic.com"
+                />
+              ) : (
+                <Input
+                  label="Email"
+                  type="email"
+                  value={form.email}
+                  onChange={handleChange("email")}
+                  placeholder="pasien@clinic.com"
+                />
+              )}
+
+              {!isEditMode && (
+                <Input
+                  label="Password"
+                  type="password"
+                  value={form.password}
+                  onChange={handleChange("password")}
+                  placeholder="Minimal 8 karakter"
+                />
+              )}
               <Input
                 label="Nomor Telepon"
                 value={form.phone}

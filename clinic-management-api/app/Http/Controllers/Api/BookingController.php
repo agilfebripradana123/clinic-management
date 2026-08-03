@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -114,15 +115,6 @@ class BookingController extends Controller
 
             DB::commit();
 
-            return response()->json([
-                'message' => 'Booking berhasil dibuat.',
-                'data' => $booking->load([
-                    'doctor.user',
-                    'patient.user',
-                    'schedule'
-                ])
-            ], 201);
-
         } catch (\Throwable $th) {
 
             DB::rollBack();
@@ -132,6 +124,60 @@ class BookingController extends Controller
                 'error' => $th->getMessage(),
             ], 500);
         }
+
+        // Notifikasi (di luar transaksi — kegagalan tak menggagalkan booking)
+        $booking->refresh();
+
+        // 1. Kirim ke admin
+        try {
+            $patientName = $booking->patient?->user?->name ?? 'Pasien';
+
+            NotificationService::sendToAdmins(
+                'booking_new',
+                'Booking Baru',
+                "Booking baru {$booking->booking_code} oleh {$patientName}.",
+                ['booking_id' => $booking->id]
+            );
+        } catch (\Throwable $th) {
+            report($th);
+        }
+
+        // 2. Kirim ke dokter
+        try {
+            $doctorUserId = $booking->doctor?->user_id;
+
+            if ($doctorUserId) {
+                $months = [
+                    1 => 'Januari', 2 => 'Februari', 3 => 'Maret',
+                    4 => 'April', 5 => 'Mei', 6 => 'Juni',
+                    7 => 'Juli', 8 => 'Agustus', 9 => 'September',
+                    10 => 'Oktober', 11 => 'November', 12 => 'Desember',
+                ];
+
+                $bookingDate = $booking->booking_date;
+                $monthName = $months[$bookingDate->format('n')] ?? $bookingDate->format('n');
+                $dateLabel = $bookingDate->format('j') . ' ' . $monthName . ' ' . $bookingDate->format('Y');
+
+                NotificationService::send(
+                    $doctorUserId,
+                    'booking_new',
+                    'Jadwal Booking Baru',
+                    "Anda mendapat booking baru {$booking->booking_code} pada {$dateLabel}.",
+                    ['booking_id' => $booking->id]
+                );
+            }
+        } catch (\Throwable $th) {
+            report($th);
+        }
+
+        return response()->json([
+            'message' => 'Booking berhasil dibuat.',
+            'data' => $booking->load([
+                'doctor.user',
+                'patient.user',
+                'schedule'
+            ])
+        ], 201);
     }
 
     /**
@@ -168,16 +214,9 @@ class BookingController extends Controller
 
             $booking->update($validated);
 
-            DB::commit();
+            $statusChanged = $booking->wasChanged('status');
 
-            return response()->json([
-                'message' => 'Booking berhasil diperbarui.',
-                'data' => $booking->fresh()->load([
-                    'doctor.user',
-                    'patient.user',
-                    'schedule'
-                ])
-            ]);
+            DB::commit();
 
         } catch (\Throwable $th) {
 
@@ -188,6 +227,40 @@ class BookingController extends Controller
                 'error' => $th->getMessage(),
             ], 500);
         }
+
+        // Notifikasi: pasien saat status booking berubah
+        if ($statusChanged) {
+            try {
+                $booking->refresh();
+
+                $statusLabels = [
+                    'pending' => 'Menunggu',
+                    'confirmed' => 'Dikonfirmasi',
+                    'completed' => 'Selesai',
+                    'cancelled' => 'Dibatalkan',
+                ];
+
+                NotificationService::send(
+                    $booking->patient->user_id,
+                    'booking_status',
+                    'Status Booking Diperbarui',
+                    "Booking {$booking->booking_code} kini berstatus " .
+                        ($statusLabels[$booking->status] ?? $booking->status) . ".",
+                    ['booking_id' => $booking->id, 'status' => $booking->status]
+                );
+            } catch (\Throwable $th) {
+                // abaikan — update tetap sukses
+            }
+        }
+
+        return response()->json([
+            'message' => 'Booking berhasil diperbarui.',
+            'data' => $booking->fresh()->load([
+                'doctor.user',
+                'patient.user',
+                'schedule'
+            ])
+        ]);
     }
 
     /**

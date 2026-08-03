@@ -107,30 +107,42 @@ export default function DoctorFormPage() {
               onChange={handleChange("name")}
               placeholder="Masukkan nama dokter"
             />
-            <Input
-              label="Nomor SIP"
-              value={form.license_number}
-              onChange={handleChange("license_number")}
-              placeholder="SIP-001"
-            />
-            <Input
-              label="Email"
-              type="email"
-              value={form.email}
-              onChange={handleChange("email")}
-              placeholder="dokter@clinic.com"
-            />
-            <Input
-              label="Password"
-              type="password"
-              value={form.password}
-              onChange={handleChange("password")}
-              placeholder={
-                isEditMode
-                  ? "Kosongkan jika tidak ingin mengubah password"
-                  : "Minimal 8 karakter"
-              }
-            />
+            {isEditMode && (
+              <Input
+                label="Nomor SIP"
+                value={form.license_number}
+                disabled
+                placeholder="SIP-001"
+              />
+            )}
+
+            {isEditMode ? (
+              <Input
+                label="Email"
+                type="email"
+                value={form.email}
+                disabled
+                placeholder="dokter@clinic.com"
+              />
+            ) : (
+              <Input
+                label="Email"
+                type="email"
+                value={form.email}
+                onChange={handleChange("email")}
+                placeholder="dokter@clinic.com"
+              />
+            )}
+
+            {!isEditMode && (
+              <Input
+                label="Password"
+                type="password"
+                value={form.password}
+                onChange={handleChange("password")}
+                placeholder="Minimal 8 karakter"
+              />
+            )}
             <Input
               label="Spesialis"
               value={form.specialty}

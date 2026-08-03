@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Models\MedicalRecord;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -29,6 +30,64 @@ class MedicalRecordController extends Controller
 
         return response()->json($bookings);
     }
+    /**
+     * Ekspor semua rekam medis ke CSV (kompatibel Excel, dengan BOM UTF-8).
+     */
+    public function export()
+    {
+        $records = MedicalRecord::with([
+            'booking.patient.user',
+            'booking.doctor.user',
+        ])
+        ->orderByDesc('id')
+        ->get();
+
+        $handle = fopen('php://temp', 'r+');
+
+        // BOM UTF-8 agar karakter khusus terbaca di Excel
+        fwrite($handle, "\xEF\xBB\xBF");
+
+        fputcsv($handle, [
+            'No',
+            'Kode Booking',
+            'Pasien',
+            'Dokter',
+            'Keluhan',
+            'Diagnosa',
+            'Pengobatan',
+            'Resep',
+            'Catatan',
+            'Tanggal Dibuat',
+        ]);
+
+        $records->each(function ($record, $index) use ($handle) {
+            $booking = $record->booking;
+
+            fputcsv($handle, [
+                $index + 1,
+                $booking->booking_code ?? '-',
+                $booking->patient?->user?->name ?? '-',
+                $booking->doctor?->user?->name ?? '-',
+                $record->complaint ?? '-',
+                $record->diagnosis ?? '-',
+                $record->treatment ?? '-',
+                $record->prescription ?? '-',
+                $record->notes ?? '-',
+                $record->created_at?->format('Y-m-d') ?? '-',
+            ]);
+        });
+
+        rewind($handle);
+        $csv = stream_get_contents($handle);
+        fclose($handle);
+
+        $filename = 'rekam-medis-' . now()->format('Y-m-d') . '.csv';
+
+        return response($csv)
+            ->header('Content-Type', 'text/csv; charset=UTF-8')
+            ->header('Content-Disposition', "attachment; filename=\"{$filename}\"");
+    }
+
     public function index(Request $request)
     {
         $query = MedicalRecord::with([
@@ -105,15 +164,6 @@ class MedicalRecordController extends Controller
 
             DB::commit();
 
-            return response()->json(
-                $record->load([
-                    'booking.patient.user',
-                    'booking.doctor.user',
-                    'booking.schedule',
-                ]),
-                201
-            );
-
         } catch (\Throwable $e) {
 
             DB::rollBack();
@@ -122,6 +172,38 @@ class MedicalRecordController extends Controller
                 'message' => $e->getMessage(),
             ],500);
         }
+
+        // Notifikasi ke pasien: rekam medis sudah dibuat & booking selesai
+        try {
+            $booking->refresh();
+
+            NotificationService::send(
+                $booking->patient->user_id,
+                'medical_record_created',
+                'Rekam Medis Tersedia',
+                "Rekam medis untuk booking {$booking->booking_code} telah dibuat. Anda dapat melihatnya di menu Riwayat.",
+                ['booking_id' => $booking->id, 'medical_record_id' => $record->id]
+            );
+
+            NotificationService::send(
+                $booking->patient->user_id,
+                'booking_status',
+                'Booking Selesai',
+                "Booking {$booking->booking_code} kini berstatus Selesai.",
+                ['booking_id' => $booking->id, 'status' => 'completed']
+            );
+        } catch (\Throwable $e) {
+            // abaikan — rekam medis tetap sukses
+        }
+
+        return response()->json(
+            $record->load([
+                'booking.patient.user',
+                'booking.doctor.user',
+                'booking.schedule',
+            ]),
+            201
+        );
     }
 
     public function show(MedicalRecord $medicalRecord)

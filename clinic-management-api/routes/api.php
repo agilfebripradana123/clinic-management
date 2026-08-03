@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BookingController;
+use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\DoctorController;
 use App\Http\Controllers\Api\PatientController;
 use App\Http\Controllers\Api\ScheduleController;
@@ -13,6 +14,8 @@ use App\Http\Controllers\Api\ProfileController;
 
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
+Route::get('/public/stats', [ReportController::class, 'summary']);
+Route::post('/forgot-password', [AuthController::class, 'requestPasswordReset']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
@@ -25,9 +28,21 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('patients', PatientController::class);
     Route::apiResource('bookings', BookingController::class);
     Route::apiResource('schedules', ScheduleController::class);
+
+    Route::prefix('notifications')->group(function () {
+        Route::get('/', [NotificationController::class, 'index']);
+        Route::get('/unread-count', [NotificationController::class, 'unreadCount']);
+        Route::post('/read-all', [NotificationController::class, 'markAllRead']);
+        Route::post('/{notification}/read', [NotificationController::class, 'markRead']);
+    });
     Route::get(
         '/medical-records/available-bookings',
         [MedicalRecordController::class, 'availableBookings']
+    );
+
+    Route::get(
+        '/medical-records/export',
+        [MedicalRecordController::class, 'export']
     );
 
     Route::apiResource(

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Patient;
 use App\Models\User;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -17,10 +18,10 @@ class AuthController extends Controller
             'name' => ['required', 'string', 'max:100'],
             'email' => ['required', 'email', 'max:100', 'unique:users,email'],
             'password' => ['required', 'string', 'min:8'],
-            'gender' => ['nullable', 'in:L,P'],
-            'birth_date' => ['nullable', 'date'],
-            'phone' => ['nullable', 'string', 'max:20'],
-            'address' => ['nullable', 'string', 'max:255'],
+            'gender' => ['required', 'in:L,P'],
+            'birth_date' => ['required', 'date'],
+            'phone' => ['required', 'string', 'max:20'],
+            'address' => ['required', 'string', 'max:255'],
         ]);
 
         $user = DB::transaction(function () use ($validated) {
@@ -92,7 +93,36 @@ class AuthController extends Controller
         ], 200);
     }
 
-        public function me(Request $request)
+        /**
+     * Pasien lupa password → kirim permintaan reset ke admin.
+     */
+    public function requestPasswordReset(Request $request)
+    {
+        $validated = $request->validate([
+            'email' => 'required|email',
+        ]);
+
+        $user = User::where('email', $validated['email'])->first();
+
+        if (!$user) {
+            return response()->json([
+                'message' => 'Email tidak ditemukan.',
+            ], 404);
+        }
+
+        NotificationService::sendToAdmins(
+            'password_reset_request',
+            'Permintaan Reset Password',
+            "{$user->name} ({$user->email}) meminta reset password.",
+            ['user_id' => $user->id, 'email' => $user->email]
+        );
+
+        return response()->json([
+            'message' => 'Permintaan reset password dikirim ke admin.',
+        ], 200);
+    }
+
+    public function me(Request $request)
     {
         return response()->json([
             'user' => $request->user()

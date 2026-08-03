@@ -7,7 +7,6 @@ use App\Models\Patient;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 
 class PatientController extends Controller
 {
@@ -67,7 +66,7 @@ class PatientController extends Controller
             $user = User::create([
                 'name' => $validated['name'],
                 'email' => $validated['email'],
-                'password' => Hash::make($validated['password']),
+                'password' => $validated['password'], // otomatis di-hash oleh cast hashed
             ]);
             $lastPatient = Patient::withTrashed()
                 ->orderByDesc('id')
@@ -105,7 +104,7 @@ class PatientController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
 
-            'email' => 'required|email|unique:users,email,' . $patient->user_id,
+            'email' => 'sometimes|email|unique:users,email,' . $patient->user_id,
 
             'password' => 'nullable|string|min:8',
 
@@ -126,11 +125,15 @@ class PatientController extends Controller
 
             $userData = [
                 'name' => $validated['name'],
-                'email' => $validated['email'],
             ];
 
+            // Email & password hanya diubah jika dikirim
+            if (!empty($validated['email'])) {
+                $userData['email'] = $validated['email'];
+            }
+
             if (!empty($validated['password'])) {
-                $userData['password'] = Hash::make($validated['password']);
+                $userData['password'] = $validated['password'];
             }
 
             $patient->user()->update($userData);

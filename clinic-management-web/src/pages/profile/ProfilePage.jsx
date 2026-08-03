@@ -395,8 +395,8 @@ export default function ProfilePage() {
       </div>
 
       {showModal ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
-          <div className="w-full max-w-2xl rounded-3xl bg-white p-5 shadow-2xl sm:p-6">
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-900/50 p-4">
+          <div className="my-4 w-full max-w-2xl rounded-3xl bg-white p-5 shadow-2xl sm:p-6">
             <div className="mb-5 flex items-center justify-between">
               <h3 className="text-xl font-bold text-slate-900">Edit Profil</h3>
               <button
@@ -494,13 +494,8 @@ export default function ProfilePage() {
                       </span>
                       <input
                         value={form.license_number}
-                        onChange={(e) =>
-                          setForm((current) => ({
-                            ...current,
-                            license_number: e.target.value,
-                          }))
-                        }
-                        className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-cyan-500"
+                        disabled
+                        className="w-full rounded-2xl border border-slate-200 bg-slate-100 px-4 py-3 text-sm outline-none"
                       />
                     </label>
                   </>
@@ -514,13 +509,8 @@ export default function ProfilePage() {
                       </span>
                       <input
                         value={form.medical_record_number}
-                        onChange={(e) =>
-                          setForm((current) => ({
-                            ...current,
-                            medical_record_number: e.target.value,
-                          }))
-                        }
-                        className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-cyan-500"
+                        disabled
+                        className="w-full rounded-2xl border border-slate-200 bg-slate-100 px-4 py-3 text-sm outline-none"
                       />
                     </label>
 

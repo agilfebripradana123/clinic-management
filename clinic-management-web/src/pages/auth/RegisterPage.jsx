@@ -1,13 +1,15 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { Activity } from "lucide-react";
 import Swal from "sweetalert2";
 
-import AuthLayout from "../../components/layout/AuthLayout";
 import Card from "../../components/ui/Card";
 import Button from "../../components/ui/Button";
 import Input from "../../components/ui/Input";
 
 import { register } from "../../services/authService";
+import { toast } from "../../utils/toast";
+import colors from "../../styles/colors";
 
 export default function RegisterPage() {
   const navigate = useNavigate();
@@ -50,6 +52,24 @@ export default function RegisterPage() {
       nextErrors.password = "Password minimal 8 karakter.";
     }
 
+    if (!form.gender) {
+      nextErrors.gender = "Jenis kelamin wajib dipilih.";
+    }
+
+    if (!form.birth_date) {
+      nextErrors.birth_date = "Tanggal lahir wajib diisi.";
+    }
+
+    if (!form.phone.trim()) {
+      nextErrors.phone = "Nomor telepon wajib diisi.";
+    } else if (!/^[0-9+()-]{8,20}$/.test(form.phone.trim())) {
+      nextErrors.phone = "Nomor telepon tidak valid.";
+    }
+
+    if (!form.address.trim()) {
+      nextErrors.address = "Alamat wajib diisi.";
+    }
+
     setErrors(nextErrors);
 
     if (Object.keys(nextErrors).length > 0) {
@@ -63,10 +83,10 @@ export default function RegisterPage() {
         name: form.name,
         email: form.email,
         password: form.password,
-        gender: form.gender || null,
-        birth_date: form.birth_date || null,
-        phone: form.phone || null,
-        address: form.address || null,
+        gender: form.gender,
+        birth_date: form.birth_date,
+        phone: form.phone,
+        address: form.address,
       };
 
       const response = await register(payload);
@@ -82,6 +102,22 @@ export default function RegisterPage() {
 
       navigate("/patient/dashboard");
     } catch (error) {
+      // Tampilkan error validasi dari server per-field (Laravel 422)
+      const serverErrors = error.response?.data?.errors;
+
+      if (serverErrors) {
+        const nextServerErrors = {};
+        Object.entries(serverErrors).forEach(([field, messages]) => {
+          nextServerErrors[field] = Array.isArray(messages)
+            ? messages[0]
+            : messages;
+        });
+        setErrors(nextServerErrors);
+
+        toast.error(error.response?.data?.message || "Periksa kembali isian Anda.");
+        return;
+      }
+
       await Swal.fire({
         icon: "error",
         title: "Registrasi Gagal",
@@ -96,13 +132,41 @@ export default function RegisterPage() {
   };
 
   return (
-    <AuthLayout>
-      <Card className="w-full max-w-2xl p-5 md:p-6">
+    <div
+      className="relative flex min-h-screen items-center justify-center overflow-hidden px-6 py-10"
+      style={{ backgroundColor: colors.background }}
+    >
+      {/* Background dekoratif */}
+      <div
+        className="absolute -left-40 -top-40 h-96 w-96 rounded-full blur-3xl"
+        style={{ backgroundColor: `${colors.primary}25` }}
+      />
+
+      <div
+        className="absolute -right-40 bottom-0 h-96 w-96 rounded-full blur-3xl"
+        style={{ backgroundColor: `${colors.secondary}25` }}
+      />
+
+      <Card className="relative w-full max-w-2xl p-5 md:p-6">
         <div className="mb-6">
-          <h2 className="text-2xl font-black text-slate-900 md:text-3xl">
+          <div
+            className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl shadow-lg"
+            style={{
+              backgroundColor: colors.primary,
+              color: "#fff",
+            }}
+          >
+            <Activity size={28} />
+          </div>
+
+          <h2
+            className="text-2xl font-black md:text-3xl"
+            style={{ color: colors.text }}
+          >
             Buat Akun Baru
           </h2>
-          <p className="mt-2 text-sm text-slate-500">
+
+          <p className="mt-2 text-sm" style={{ color: colors.textSecondary }}>
             Registrasi untuk pasien dan akses booking pemeriksaan.
           </p>
         </div>
@@ -152,42 +216,64 @@ export default function RegisterPage() {
             )}
           </div>
 
-          <Input
-            label="Jenis Kelamin (opsional)"
-            type="select"
-            name="gender"
-            value={form.gender}
-            onChange={handleChange}
-          >
-            <option value="">Pilih</option>
-            <option value="L">Laki-laki</option>
-            <option value="P">Perempuan</option>
-          </Input>
+          <div>
+            <Input
+              label="Jenis Kelamin"
+              type="select"
+              name="gender"
+              value={form.gender}
+              onChange={handleChange}
+            >
+              <option value="">Pilih</option>
+              <option value="L">Laki-laki</option>
+              <option value="P">Perempuan</option>
+            </Input>
 
-          <Input
-            label="Tanggal Lahir (opsional)"
-            type="date"
-            name="birth_date"
-            value={form.birth_date}
-            onChange={handleChange}
-          />
+            {errors.gender && (
+              <p className="mt-1 text-sm text-rose-600">{errors.gender}</p>
+            )}
+          </div>
 
-          <Input
-            label="Nomor Telepon (opsional)"
-            name="phone"
-            placeholder="081234567890"
-            value={form.phone}
-            onChange={handleChange}
-          />
+          <div>
+            <Input
+              label="Tanggal Lahir"
+              type="date"
+              name="birth_date"
+              value={form.birth_date}
+              onChange={handleChange}
+            />
+
+            {errors.birth_date && (
+              <p className="mt-1 text-sm text-rose-600">{errors.birth_date}</p>
+            )}
+          </div>
+
+          <div>
+            <Input
+              label="Nomor Telepon"
+              name="phone"
+              placeholder="081234567890"
+              value={form.phone}
+              onChange={handleChange}
+            />
+
+            {errors.phone && (
+              <p className="mt-1 text-sm text-rose-600">{errors.phone}</p>
+            )}
+          </div>
 
           <div className="md:col-span-2">
             <Input
-              label="Alamat (opsional)"
+              label="Alamat"
               name="address"
               placeholder="Masukkan alamat lengkap"
               value={form.address}
               onChange={handleChange}
             />
+
+            {errors.address && (
+              <p className="mt-1 text-sm text-rose-600">{errors.address}</p>
+            )}
           </div>
 
           <div className="md:col-span-2 mt-1">
@@ -197,13 +283,26 @@ export default function RegisterPage() {
           </div>
         </form>
 
-        <p className="mt-5 text-center text-sm text-slate-500">
+        <div
+          className="mt-5 text-center text-sm"
+          style={{ color: colors.textSecondary }}
+        >
           Sudah punya akun?{" "}
           <Link to="/login" className="font-semibold text-cyan-600">
             Login
           </Link>
-        </p>
+        </div>
+
+        <div
+          className="mt-8 border-t pt-6 text-center text-sm"
+          style={{
+            borderColor: colors.border,
+            color: colors.textSecondary,
+          }}
+        >
+          © 2026 Clinic Management System
+        </div>
       </Card>
-    </AuthLayout>
+    </div>
   );
 }

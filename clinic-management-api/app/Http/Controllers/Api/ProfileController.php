@@ -44,15 +44,6 @@ class ProfileController extends Controller
             'phone' => ['sometimes', 'nullable', 'string', 'max:20'],
             'address' => ['sometimes', 'nullable', 'string'],
             'specialist' => ['sometimes', 'nullable', 'string', 'max:255'],
-            'license_number' => ['sometimes', 'nullable', 'string', 'max:255'],
-            'medical_record_number' => [
-                'sometimes',
-                'nullable',
-                'string',
-                'max:255',
-                Rule::unique('patients', 'medical_record_number')
-                    ->ignore($user->patient?->id),
-            ],
             'gender' => ['sometimes', 'nullable', 'in:L,P'],
             'birth_date' => ['sometimes', 'nullable', 'date'],
         ]);
@@ -75,7 +66,6 @@ class ProfileController extends Controller
                 'phone' => $validated['phone'] ?? $user->doctor->phone,
                 'address' => $validated['address'] ?? $user->doctor->address,
                 'specialist' => $validated['specialist'] ?? $user->doctor->specialist,
-                'license_number' => $validated['license_number'] ?? $user->doctor->license_number,
             ]);
         }
 
@@ -83,7 +73,6 @@ class ProfileController extends Controller
             $user->patient()->update([
                 'phone' => $validated['phone'] ?? $user->patient->phone,
                 'address' => $validated['address'] ?? $user->patient->address,
-                'medical_record_number' => $validated['medical_record_number'] ?? $user->patient->medical_record_number,
                 'gender' => $validated['gender'] ?? $user->patient->gender,
                 'birth_date' => $validated['birth_date'] ?? $user->patient->birth_date,
             ]);

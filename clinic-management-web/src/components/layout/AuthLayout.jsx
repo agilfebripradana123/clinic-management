@@ -1,5 +1,20 @@
-import { Activity, ShieldCheck } from "lucide-react";
+import {
+  CalendarCheck,
+  ClipboardList,
+  HeartPulse,
+  ShieldCheck,
+  Stethoscope,
+} from "lucide-react";
+
 import colors from "../../styles/colors";
+
+// Fitur utama — sesuai layanan dalam sistem.
+const features = [
+  { icon: Stethoscope, label: "Dokter Spesialis" },
+  { icon: CalendarCheck, label: "Booking Online" },
+  { icon: ClipboardList, label: "Rekam Medis Digital" },
+  { icon: HeartPulse, label: "Layanan Terpercaya" },
+];
 
 export default function AuthLayout({ children }) {
   return (
@@ -7,7 +22,7 @@ export default function AuthLayout({ children }) {
       className="relative flex min-h-screen items-center justify-center overflow-hidden px-6 py-10"
       style={{ backgroundColor: colors.background }}
     >
-      {/* Background */}
+      {/* Background dekoratif */}
       <div
         className="absolute -left-40 -top-40 h-96 w-96 rounded-full blur-3xl"
         style={{ backgroundColor: `${colors.primary}25` }}
@@ -18,8 +33,13 @@ export default function AuthLayout({ children }) {
         style={{ backgroundColor: `${colors.secondary}25` }}
       />
 
+      <div
+        className="absolute left-1/3 top-10 h-64 w-64 rounded-full blur-3xl"
+        style={{ backgroundColor: `${colors.accent}15` }}
+      />
+
       <div className="relative mx-auto grid w-full max-w-7xl items-center gap-16 lg:grid-cols-2">
-        {/* Left */}
+        {/* Kiri — promo */}
         <div className="hidden lg:block">
           <span
             className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold"
@@ -33,55 +53,50 @@ export default function AuthLayout({ children }) {
           </span>
 
           <h1
-            className="mt-8 text-6xl font-black leading-tight"
+            className="mt-8 text-5xl font-black leading-tight xl:text-6xl"
             style={{ color: colors.text }}
           >
-            Manage Your
+            Selamat Datang
             <br />
-            <span style={{ color: colors.primary }}>Clinic Smarter.</span>
+            <span
+              className="bg-clip-text text-transparent"
+              style={{
+                backgroundImage: `linear-gradient(90deg, ${colors.primary}, ${colors.secondary})`,
+              }}
+            >
+              di Klinik Kami
+            </span>
           </h1>
 
-          <p
-            className="mt-6 max-w-lg text-lg leading-8"
-            style={{ color: colors.textSecondary }}
-          >
-            Kelola pasien, dokter, jadwal, dan rekam medis dalam satu dashboard
-            modern yang cepat, aman, dan mudah digunakan.
-          </p>
+          {/* Fitur utama */}
+          <div className="mt-12 grid grid-cols-2 gap-4">
+            {features.map(({ icon: Icon, label }) => (
+              <div
+                key={label}
+                className="group flex items-center gap-3 rounded-2xl p-4 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+                style={{
+                  backgroundColor: colors.card,
+                  border: `1px solid ${colors.border}`,
+                }}
+              >
+                <div
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-transform group-hover:scale-110"
+                  style={{ backgroundColor: `${colors.primary}15` }}
+                >
+                  <Icon size={20} style={{ color: colors.primary }} />
+                </div>
 
-          <div className="mt-10 grid grid-cols-2 gap-5">
-            <InfoCard title="Patients" value="320+" />
-            <InfoCard title="Doctors" value="28+" />
-            <InfoCard title="Bookings" value="48 Today" />
-            <InfoCard title="Medical Records" value="100% Digital" />
+                <span className="text-sm font-semibold" style={{ color: colors.text }}>
+                  {label}
+                </span>
+              </div>
+            ))}
           </div>
         </div>
 
-        {/* Right */}
+        {/* Kanan — form */}
         <div className="w-full max-w-lg justify-self-center">{children}</div>
       </div>
-    </div>
-  );
-}
-
-function InfoCard({ title, value }) {
-  return (
-    <div
-      className="rounded-2xl p-5 shadow-sm"
-      style={{
-        backgroundColor: colors.card,
-        border: `1px solid ${colors.border}`,
-      }}
-    >
-      <Activity className="mb-3" size={22} style={{ color: colors.primary }} />
-
-      <h3 className="font-semibold" style={{ color: colors.text }}>
-        {title}
-      </h3>
-
-      <p className="mt-1 text-sm" style={{ color: colors.textSecondary }}>
-        {value}
-      </p>
     </div>
   );
 }

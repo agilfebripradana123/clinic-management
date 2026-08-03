@@ -13,3 +13,88 @@ body {
     "Segoe UI",
     sans-serif;
 }
+
+/* ---- Toast gooey: responsive di layar kecil ---- */
+[data-sonner-toast] .gooey-wrapper {
+  max-width: 100%;
+}
+
+[data-sonner-toast] .gooey-contentExpanded {
+  max-width: calc(100vw - 40px);
+}
+
+/* Judul panjang tidak mendorong toast keluar layar */
+[data-sonner-toast] .gooey-header {
+  max-width: 100%;
+}
+
+[data-sonner-toast] .gooey-header > .gooey-title {
+  max-width: 100%;
+}
+
+@media (max-width: 640px) {
+  [data-sonner-toast] {
+    max-width: calc(100vw - 24px) !important;
+  }
+
+  [data-sonner-toast] .gooey-contentCompact,
+  [data-sonner-toast] .gooey-contentExpanded {
+    padding: 10px 12px;
+  }
+}
+
+/* ---- Tabel: bikin mudah dibaca ---- */
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+thead th {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: #0f172a;
+  background-color: #f1f5f9;
+}
+
+tbody tr {
+  transition: background-color 0.15s ease;
+}
+
+tbody tr:nth-child(even) {
+  background-color: #fafbfc;
+}
+
+tbody tr:hover {
+  background-color: #ecfeff;
+}
+
+tbody td {
+  font-size: 14px;
+  vertical-align: middle;
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+
+/* Garis antar kolom — kalahkan utility Tailwind (divide) */
+thead th,
+tbody td {
+  border-left: 2px solid #cbd5e1 !important;
+}
+
+thead th:first-child,
+tbody td:first-child {
+  border-left: none !important;
+}
+
+/* Garis antar baris — kalahkan utility Tailwind (divide) */
+thead th,
+tbody td {
+  border-bottom: 2px solid #cbd5e1 !important;
+}
+
+tbody tr:last-child td {
+  border-bottom: none !important;
+}
+

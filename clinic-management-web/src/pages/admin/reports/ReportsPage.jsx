@@ -1,180 +1,207 @@
 import { useEffect, useState } from "react";
-import {
-  Users,
-  Stethoscope,
-  CalendarDays,
-  FileText,
-  Clock3,
-  CalendarCheck,
-  CheckCircle2,
-  Timer,
-} from "lucide-react";
+import { Download, FileSpreadsheet } from "lucide-react";
 
 import DashboardLayout from "../../../components/layout/DashboardLayout";
 import Card from "../../../components/ui/Card";
-
-import reportService from "../../../services/reportService";
+import PaginationControls from "../../../components/ui/PaginationControls";
+import { toast } from "../../../utils/toast";
+import api from "../../../services/api";
+import { extractPageMeta } from "../../../services/api";
 
 export default function ReportsPage() {
-  const [summary, setSummary] = useState({});
+  const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [exporting, setExporting] = useState(false);
+  const [total, setTotal] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
-  useEffect(() => {
-    loadSummary();
-  }, []);
+  const loadRecords = async () => {
+    setLoading(true);
 
-  const loadSummary = async () => {
     try {
-      const response = await reportService.getSummary();
+      const response = await api.get("/medical-records", {
+        params: { page: currentPage, per_page: pageSize },
+      });
 
-      setSummary(response.data);
+      const { list, total: recordTotal } = extractPageMeta(response.data);
+      setRecords(list);
+      setTotal(recordTotal);
     } catch (error) {
-      console.error(error);
+      toast.error("Gagal memuat rekam medis");
     } finally {
       setLoading(false);
     }
   };
 
-  const cards = [
-    {
-      title: "Total Pasien",
-      value: summary.total_patients,
-      icon: Users,
-      color: "bg-cyan-500",
-    },
-    {
-      title: "Total Dokter",
-      value: summary.total_doctors,
-      icon: Stethoscope,
-      color: "bg-emerald-500",
-    },
-    {
-      title: "Total Booking",
-      value: summary.total_bookings,
-      icon: CalendarDays,
-      color: "bg-violet-500",
-    },
-    {
-      title: "Rekam Medis",
-      value: summary.total_medical_records,
-      icon: FileText,
-      color: "bg-orange-500",
-    },
-    {
-      title: "Jadwal Dokter",
-      value: summary.total_schedules,
-      icon: Clock3,
-      color: "bg-blue-500",
-    },
-    {
-      title: "Booking Hari Ini",
-      value: summary.today_bookings,
-      icon: CalendarCheck,
-      color: "bg-indigo-500",
-    },
-    {
-      title: "Booking Selesai",
-      value: summary.completed_bookings,
-      icon: CheckCircle2,
-      color: "bg-green-500",
-    },
-    {
-      title: "Booking Pending",
-      value: summary.pending_bookings,
-      icon: Timer,
-      color: "bg-red-500",
-    },
-  ];
+  useEffect(() => {
+    loadRecords();
+  }, [currentPage, pageSize]);
+
+  const handleExport = async () => {
+    setExporting(true);
+
+    try {
+      const response = await api.get("/medical-records/export", {
+        responseType: "blob",
+      });
+
+      const disposition = response.headers["content-disposition"] || "";
+      const match = disposition.match(/filename="?([^";]+)"?/);
+      const filename = match?.[1] || "rekam-medis.csv";
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast.success("Rekam medis berhasil diunduh");
+    } catch (error) {
+      toast.error("Gagal mengunduh rekam medis");
+    } finally {
+      setExporting(false);
+    }
+  };
 
   return (
     <DashboardLayout
-      title="Reports"
-      subtitle="Ringkasan data klinik"
+      title="Laporan"
+      subtitle="Arsip rekam medis pasien"
     >
-      <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
-        {cards.map((card) => {
-          const Icon = card.icon;
+      <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-sm text-slate-500">
+          {total} data rekam medis tercatat.
+        </p>
 
-          return (
-            <Card
-              key={card.title}
-              className="p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-slate-500">
-                    {card.title}
-                  </p>
-
-                  <h2 className="mt-3 text-4xl font-bold text-slate-800">
-                    {loading ? "-" : card.value ?? 0}
-                  </h2>
-                </div>
-
-                <div
-                  className={`rounded-2xl p-4 text-white ${card.color}`}
-                >
-                  <Icon size={28} />
-                </div>
-              </div>
-            </Card>
-          );
-        })}
+        <button
+          onClick={handleExport}
+          disabled={exporting}
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-600 disabled:opacity-60"
+        >
+          {exporting ? (
+            <>
+              <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                <circle
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="3"
+                  className="opacity-25"
+                />
+                <path
+                  d="M22 12a10 10 0 0 1-10 10"
+                  stroke="currentColor"
+                  strokeWidth="3"
+                />
+              </svg>
+              Mengunduh...
+            </>
+          ) : (
+            <>
+              <FileSpreadsheet size={16} />
+              <Download size={16} />
+              Download Excel
+            </>
+          )}
+        </button>
       </div>
 
-      <Card className="mt-6 p-6">
-        <h2 className="text-lg font-semibold text-slate-800">
-          Ringkasan Klinik
-        </h2>
+      {/* Tabel rekam medis */}
+      <Card className="overflow-hidden p-0">
+        <div className="overflow-x-auto">
+          <table className="min-w-full">
+            <thead className="bg-slate-50">
+              <tr>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-slate-700">
+                  Kode Booking
+                </th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-slate-700">
+                  Pasien
+                </th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-slate-700">
+                  Dokter
+                </th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-slate-700">
+                  Diagnosa
+                </th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-slate-700">
+                  Pengobatan
+                </th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-slate-700">
+                  Resep
+                </th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-slate-700">
+                  Tanggal
+                </th>
+              </tr>
+            </thead>
 
-        <div className="mt-5 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-          <div className="rounded-xl border bg-cyan-50 p-5">
-            <p className="text-sm text-slate-500">
-              Total Aktivitas
-            </p>
+            <tbody className="divide-y divide-slate-100 bg-white">
+              {loading ? (
+                <tr>
+                  <td colSpan={7} className="py-10 text-center text-slate-500">
+                    Memuat rekam medis...
+                  </td>
+                </tr>
+              ) : records.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="py-10 text-center text-slate-500">
+                    Belum ada data rekam medis.
+                  </td>
+                </tr>
+              ) : (
+                records.map((record) => (
+                  <tr key={record.id} className="hover:bg-slate-50">
+                    <td className="px-6 py-4 font-medium text-slate-800">
+                      {record.booking?.booking_code || "-"}
+                    </td>
 
-            <h3 className="mt-2 text-3xl font-bold text-cyan-600">
-              {loading ? "-" : summary.total_bookings ?? 0}
-            </h3>
-          </div>
+                    <td className="px-6 py-4 text-slate-600">
+                      {record.booking?.patient?.user?.name || "-"}
+                    </td>
 
-          <div className="rounded-xl border bg-emerald-50 p-5">
-            <p className="text-sm text-slate-500">
-              Rekam Medis
-            </p>
+                    <td className="px-6 py-4 text-slate-600">
+                      {record.booking?.doctor?.user?.name || "-"}
+                    </td>
 
-            <h3 className="mt-2 text-3xl font-bold text-emerald-600">
-              {loading
-                ? "-"
-                : summary.total_medical_records ?? 0}
-            </h3>
-          </div>
+                    <td className="px-6 py-4 text-slate-600">
+                      {record.diagnosis || "-"}
+                    </td>
 
-          <div className="rounded-xl border bg-violet-50 p-5">
-            <p className="text-sm text-slate-500">
-              Booking Hari Ini
-            </p>
+                    <td className="px-6 py-4 text-slate-600">
+                      {record.treatment || "-"}
+                    </td>
 
-            <h3 className="mt-2 text-3xl font-bold text-violet-600">
-              {loading
-                ? "-"
-                : summary.today_bookings ?? 0}
-            </h3>
-          </div>
+                    <td className="px-6 py-4 text-slate-600">
+                      {record.prescription || "-"}
+                    </td>
 
-          <div className="rounded-xl border bg-orange-50 p-5">
-            <p className="text-sm text-slate-500">
-              Jadwal Dokter
-            </p>
-
-            <h3 className="mt-2 text-3xl font-bold text-orange-600">
-              {loading
-                ? "-"
-                : summary.total_schedules ?? 0}
-            </h3>
-          </div>
+                    <td className="px-6 py-4 text-slate-600">
+                      {record.created_at
+                        ? new Date(record.created_at).toLocaleDateString("id-ID")
+                        : "-"}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
       </Card>
+
+      <PaginationControls
+        currentPage={currentPage}
+        setCurrentPage={setCurrentPage}
+        pageSize={pageSize}
+        setPageSize={setPageSize}
+        totalItems={total}
+        totalPages={Math.max(1, Math.ceil(total / pageSize))}
+      />
     </DashboardLayout>
   );
 }

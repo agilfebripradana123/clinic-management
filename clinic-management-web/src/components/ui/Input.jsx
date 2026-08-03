@@ -19,14 +19,15 @@ export default function Input({
     w-full
     rounded-xl
     border
-    border-slate-300
+    border-slate-200
     bg-white
     ${Icon ? "pl-11" : "pl-4"}
     ${isSelect ? "pr-4" : "pr-12"}
     text-sm
     outline-none
-    transition-all
-    duration-300
+    transition
+    duration-200
+    ease-out
     focus:border-cyan-500
     focus:ring-4
     focus:ring-cyan-100
