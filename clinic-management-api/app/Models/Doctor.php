@@ -17,6 +17,11 @@ class Doctor extends Model
         'specialist',
         'phone',
         'address',
+        'is_active',
+    ];
+
+    protected $casts = [
+        'is_active' => 'boolean',
     ];
 
     /*

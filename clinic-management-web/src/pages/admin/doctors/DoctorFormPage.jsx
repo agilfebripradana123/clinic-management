@@ -155,6 +155,26 @@ export default function DoctorFormPage() {
               {form.address.length}/255 karakter
             </p>
 
+            <div>
+              <label className="mb-2 block text-sm font-medium text-slate-700">
+                Status
+              </label>
+
+              <select
+                value={form.is_active ? "1" : "0"}
+                onChange={(e) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    is_active: e.target.value === "1",
+                  }))
+                }
+                className="w-full rounded-2xl border border-slate-300 px-4 py-3 focus:border-cyan-500 focus:outline-none"
+              >
+                <option value="1">Aktif</option>
+                <option value="0">Tidak Aktif</option>
+              </select>
+            </div>
+
             <div className="flex flex-wrap gap-3 pt-2">
               <Button
                 type="submit"

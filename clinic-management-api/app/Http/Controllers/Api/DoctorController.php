@@ -58,6 +58,7 @@ class DoctorController extends Controller
             'phone'      => 'required|string|max:20',
             'address'    => 'required|string',
             'photo'      => 'nullable|string',
+            'is_active'  => 'sometimes|boolean',
         ]);
 
         $doctor = DB::transaction(function () use ($validated) {
@@ -78,6 +79,7 @@ class DoctorController extends Controller
                 'phone'           => $validated['phone'],
                 'address'         => $validated['address'],
                 'photo'           => $validated['photo'] ?? null,
+                'is_active'       => $validated['is_active'] ?? true,
             ]);
         });
 
@@ -102,6 +104,7 @@ class DoctorController extends Controller
             'phone'     => 'required|string|max:20',
             'address'   => 'required|string',
             'photo'     => 'nullable|string',
+            'is_active' => 'sometimes|boolean',
         ]);
 
         DB::transaction(function () use ($doctor, $validated) {
@@ -129,6 +132,7 @@ class DoctorController extends Controller
                 'phone'      => $validated['phone'],
                 'address'    => $validated['address'],
                 'photo'      => $validated['photo'] ?? $doctor->photo,
+                'is_active'  => $validated['is_active'] ?? $doctor->is_active,
             ]);
         });
 
