@@ -64,13 +64,13 @@ export default function MedicalRecordDetailPage() {
                 </span>
               </div>
 
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid min-w-0 gap-4 md:grid-cols-2">
                 <div className="rounded-2xl bg-slate-50 p-4">
                   <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                     Kode Booking
                   </p>
 
-                  <p className="mt-1 text-sm text-slate-900">
+                  <p className="mt-1 break-words text-sm text-slate-900">
                     {record.booking_code}
                   </p>
                 </div>
@@ -80,7 +80,7 @@ export default function MedicalRecordDetailPage() {
                     Nama Pasien
                   </p>
 
-                  <p className="mt-1 text-sm text-slate-900">
+                  <p className="mt-1 break-words text-sm text-slate-900">
                     {record.patient_name}
                   </p>
                 </div>
@@ -90,7 +90,7 @@ export default function MedicalRecordDetailPage() {
                     Dokter
                   </p>
 
-                  <p className="mt-1 text-sm text-slate-900">
+                  <p className="mt-1 break-words text-sm text-slate-900">
                     {record.doctor_name}
                   </p>
                 </div>
@@ -100,7 +100,7 @@ export default function MedicalRecordDetailPage() {
                     Tanggal Booking
                   </p>
 
-                  <p className="mt-1 text-sm text-slate-900">
+                  <p className="mt-1 break-words text-sm text-slate-900">
                     {record.booking_date}
                   </p>
                 </div>
@@ -110,7 +110,7 @@ export default function MedicalRecordDetailPage() {
                     Keluhan
                   </p>
 
-                  <p className="mt-1 text-sm text-slate-900">
+                  <p className="mt-1 break-words text-sm text-slate-900">
                     {record.complaint}
                   </p>
                 </div>
@@ -120,7 +120,7 @@ export default function MedicalRecordDetailPage() {
                     Diagnosa
                   </p>
 
-                  <p className="mt-1 text-sm text-slate-900">
+                  <p className="mt-1 break-words text-sm text-slate-900">
                     {record.diagnosis}
                   </p>
                 </div>
@@ -130,7 +130,7 @@ export default function MedicalRecordDetailPage() {
                     Tindakan
                   </p>
 
-                  <p className="mt-1 text-sm text-slate-900">
+                  <p className="mt-1 break-words text-sm text-slate-900">
                     {record.treatment}
                   </p>
                 </div>
@@ -140,7 +140,7 @@ export default function MedicalRecordDetailPage() {
                     Resep
                   </p>
 
-                  <p className="mt-1 text-sm text-slate-900">
+                  <p className="mt-1 break-words text-sm text-slate-900">
                     {record.prescription || "-"}
                   </p>
                 </div>

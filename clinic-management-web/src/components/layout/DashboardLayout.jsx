@@ -77,7 +77,7 @@ export default function DashboardLayout({ title, subtitle, children }) {
             onMenuClick={() => setSidebarOpen((prev) => !prev)}
           />
 
-          <main className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8">
+          <main className="min-w-0 flex-1 overflow-x-hidden p-4 sm:p-6 md:p-8">
             {children}
           </main>
         </div>

@@ -96,6 +96,7 @@ class ReportService
                 return [
                     'name' => $doctor->user->name ?? 'Tanpa nama',
                     'specialist' => $doctor->specialist,
+                    'photo' => $doctor->photo ?? $doctor->user->photo,
                     'total' => (int) $doctor->bookings_count,
                 ];
             })

@@ -12,6 +12,30 @@ import { getDoctors } from "../../../services/doctorService";
 import { toast } from "../../../utils/toast";
 import useRoleBase from "../../../hooks/useRoleBase";
 
+const resolvePhotoUrl = (photo) => {
+  if (!photo) return "";
+
+  if (/^https?:\/\//.test(photo)) return photo;
+
+  const baseUrl = (import.meta.env.VITE_API_URL || "")
+    .replace(/\/api\/?$/, "")
+    .replace(/\/$/, "");
+
+  // Path foto dari storage publik Laravel → butuh prefix /storage
+  return `${baseUrl}/storage/${photo.replace(/^\/?storage\//, "")}`;
+};
+
+// Inisial nama — "dr. Budi Santoso" → "BS"
+const getInitials = (name = "") => {
+  return name
+    .replace(/^dr\.?\s+/i, "")
+    .split(" ")
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+};
+
 export default function DoctorsPage() {
   const roleBase = useRoleBase();
 
@@ -78,20 +102,34 @@ export default function DoctorsPage() {
               key={doctor.id}
               className="p-5 transition hover:-translate-y-1 hover:shadow-lg"
             >
-              <div className="flex items-start justify-between">
-                <div>
-                  <h3 className="text-lg font-bold text-slate-900">
+              <div className="flex items-center gap-4">
+                <div className="h-16 w-16 shrink-0 overflow-hidden rounded-full bg-cyan-100 ring-2 ring-cyan-50">
+                  {resolvePhotoUrl(doctor.photo) ? (
+                    <img
+                      src={resolvePhotoUrl(doctor.photo)}
+                      alt={doctor.name}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center text-lg font-bold text-cyan-700">
+                      {getInitials(doctor.name)}
+                    </div>
+                  )}
+                </div>
+
+                <div className="min-w-0 flex-1">
+                  <h3 className="truncate text-lg font-bold text-slate-900">
                     {doctor.name}
                   </h3>
 
-                  <p className="text-sm text-slate-500">
+                  <p className="truncate text-sm text-slate-500">
                     {doctor.email || "-"}
                   </p>
-                </div>
 
-                <span className="rounded-full bg-cyan-100 px-3 py-1 text-xs font-semibold text-cyan-700">
-                  {doctor.specialty || "-"}
-                </span>
+                  <span className="mt-1 inline-block rounded-full bg-cyan-100 px-3 py-1 text-xs font-semibold text-cyan-700">
+                    {doctor.specialty || "-"}
+                  </span>
+                </div>
               </div>
 
               <div className="mt-5 space-y-3 text-sm">

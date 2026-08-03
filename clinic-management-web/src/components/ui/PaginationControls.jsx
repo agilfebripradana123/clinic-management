@@ -22,12 +22,12 @@ export default function PaginationControls({
   };
 
   const btnBase =
-    "inline-flex h-9 min-w-9 items-center justify-center rounded-lg border px-2 text-sm font-semibold transition-all duration-200";
+    "inline-flex h-8 min-w-8 items-center justify-center rounded-lg border px-1.5 text-xs font-semibold transition-all duration-200 sm:h-9 sm:min-w-9 sm:px-2 sm:text-sm";
 
   return (
     <div className="mt-5 flex flex-col gap-4 rounded-2xl bg-white p-4 shadow-sm lg:flex-row lg:items-center lg:justify-between">
-      {/* Info halaman */}
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+      {/* Info halaman — tengah di mobile, kiri di desktop */}
+      <div className="flex flex-col items-center gap-2 text-center sm:flex-row sm:text-left">
         <span className="text-sm text-slate-600">Tampilkan</span>
 
         <div className="w-24">
@@ -51,14 +51,17 @@ export default function PaginationControls({
         <span className="text-sm text-slate-600">per halaman</span>
       </div>
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col items-center gap-3 text-center sm:flex-row sm:items-center sm:justify-between sm:text-left">
         <span className="text-sm text-slate-500">
           Menampilkan <b>{startItem}</b>–<b>{endItem}</b> dari{" "}
           <b>{totalItems}</b> data
         </span>
 
-        {/* Navigasi halaman */}
-        <nav className="flex items-center gap-1.5" aria-label="Navigasi halaman">
+        {/* Navigasi halaman — tengah di mobile, scroll internal */}
+        <nav
+          className="-mx-1 flex items-center justify-center gap-1 overflow-x-auto px-1 py-1 sm:justify-start sm:gap-1.5"
+          aria-label="Navigasi halaman"
+        >
           <button
             type="button"
             onClick={() => goToPage(1)}
@@ -133,9 +136,9 @@ export default function PaginationControls({
   );
 }
 
-// Nomor halaman dengan elipsis — "1 … 4 5 6 … 20"
+// Nomor halaman dengan elipsis — compact, max 5 item "1 … 4 5 6 … 20"
 function getPageNumbers(current, total) {
-  if (total <= 7) {
+  if (total <= 5) {
     return Array.from({ length: total }, (_, i) => i + 1);
   }
 

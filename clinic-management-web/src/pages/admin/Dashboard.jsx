@@ -25,6 +25,30 @@ const statusColors = {
   cancelled: "#e34948",
 };
 
+const resolvePhotoUrl = (photo) => {
+  if (!photo) return "";
+
+  if (/^https?:\/\//.test(photo)) return photo;
+
+  const baseUrl = (import.meta.env.VITE_API_URL || "")
+    .replace(/\/api\/?$/, "")
+    .replace(/\/$/, "");
+
+  // Path foto dari storage publik Laravel → butuh prefix /storage
+  return `${baseUrl}/storage/${photo.replace(/^\/?storage\//, "")}`;
+};
+
+// Inisial nama — "dr. Budi Santoso" → "BS"
+const getInitials = (name = "") => {
+  return name
+    .replace(/^dr\.?\s+/i, "")
+    .split(" ")
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+};
+
 export default function Dashboard() {
   const { user } = useAuth();
   const [summary, setSummary] = useState(null);
@@ -192,9 +216,25 @@ export default function Dashboard() {
             ) : (
               summary.top_doctors.map((doctor, index) => (
                 <div key={doctor.name} className="flex items-center gap-4">
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100 text-sm font-bold text-slate-700">
-                    {index + 1}
-                  </span>
+                  <div className="relative shrink-0">
+                    <div className="h-11 w-11 overflow-hidden rounded-full bg-cyan-100 ring-2 ring-cyan-50">
+                      {doctor.photo ? (
+                        <img
+                          src={resolvePhotoUrl(doctor.photo)}
+                          alt={doctor.name}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center text-sm font-bold text-cyan-700">
+                          {getInitials(doctor.name)}
+                        </div>
+                      )}
+                    </div>
+
+                    <span className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-slate-900 text-[10px] font-bold text-white">
+                      {index + 1}
+                    </span>
+                  </div>
 
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between">

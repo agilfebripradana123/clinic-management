@@ -52,13 +52,15 @@ export default function BookingDetailPage() {
           <p className="text-sm text-rose-500">Booking tidak ditemukan.</p>
         ) : (
           <>
-            <div className="mb-6 flex items-start justify-between">
-              <div>
-                <h2 className="text-2xl font-bold text-slate-900">
+            <div className="mb-6 flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <h2 className="break-words text-2xl font-bold text-slate-900">
                   {booking.patient_name}
                 </h2>
 
-                <p className="text-slate-500">{booking.booking_code}</p>
+                <p className="break-words text-slate-500">
+                  {booking.booking_code}
+                </p>
               </div>
 
               <span
@@ -131,7 +133,9 @@ function Info({ label, value }) {
         {label}
       </p>
 
-      <p className="mt-2 text-sm font-medium text-slate-900">{value}</p>
+      <p className="mt-2 break-words text-sm font-medium text-slate-900">
+        {value}
+      </p>
     </div>
   );
 }

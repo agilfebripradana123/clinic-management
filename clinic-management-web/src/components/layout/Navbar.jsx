@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import {
   Bell,
@@ -18,19 +19,15 @@ import useNotifications from "../../hooks/useNotifications";
 import Swal from "sweetalert2";
 
 const resolvePhotoUrl = (photo) => {
-  if (!photo) {
-    return "";
-  }
+  if (!photo) return "";
 
-  if (/^https?:\/\//.test(photo)) {
-    return photo;
-  }
+  if (/^https?:\/\//.test(photo)) return photo;
 
   const baseUrl = (import.meta.env.VITE_API_URL || "")
     .replace(/\/api\/?$/, "")
     .replace(/\/$/, "");
 
-  return `${baseUrl}${photo}`;
+  return `${baseUrl}/storage/${photo.replace(/^\/?storage\//, "")}`;
 };
 
 const typeIcons = {
@@ -40,7 +37,6 @@ const typeIcons = {
   password_reset_request: KeyRound,
 };
 
-// Status booking → Bahasa Indonesia (frontend).
 const statusId = {
   pending: "Menunggu",
   confirmed: "Dikonfirmasi",
@@ -48,7 +44,6 @@ const statusId = {
   cancelled: "Dibatalkan",
 };
 
-// Ganti kata status Inggris di pesan notif menjadi Indonesia.
 const toIndonesian = (message = "") => {
   return message
     .replace(/\bpending\b/g, statusId.pending)
@@ -59,7 +54,7 @@ const toIndonesian = (message = "") => {
 
 export default function Navbar({
   title = "Dashboard",
-  subtitle = "Welcome Back",
+  subtitle = "Welcome Back 👋",
   onMenuClick,
 }) {
   const navigate = useNavigate();
@@ -77,7 +72,6 @@ export default function Navbar({
   const [open, setOpen] = useState(false);
   const panelRef = useRef(null);
 
-  // Tutup panel saat klik di luar
   useEffect(() => {
     function onClickOutside(event) {
       if (panelRef.current && !panelRef.current.contains(event.target)) {
@@ -85,8 +79,16 @@ export default function Navbar({
       }
     }
 
-    if (open) document.addEventListener("mousedown", onClickOutside);
-    return () => document.removeEventListener("mousedown", onClickOutside);
+    if (open) {
+      document.addEventListener("mousedown", onClickOutside);
+      // Kunci scroll body saat panel terbuka di mobile
+      document.body.style.overflow = "hidden";
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", onClickOutside);
+      document.body.style.overflow = "";
+    };
   }, [open]);
 
   const avatarUrl = resolvePhotoUrl(user?.photo);
@@ -106,7 +108,6 @@ export default function Navbar({
     patient: "Pasien",
   };
 
-  // Arahkan notif ke halaman sesuai tipe & role yang login.
   const getNotificationPath = (notification) => {
     const { type, data } = notification;
     const bookingId = data?.booking_id;
@@ -124,7 +125,6 @@ export default function Navbar({
           : `/${role}/medical-records`;
 
       case "password_reset_request":
-        // Admin: arahkan ke halaman user yang minta reset
         return data?.user_id
           ? `/admin/users/${data.user_id}`
           : "/admin/users";
@@ -134,10 +134,15 @@ export default function Navbar({
     }
   };
 
-  const handleNotificationClick = (notification) => {
+  const handleNotificationClick = async (notification) => {
     const path = getNotificationPath(notification);
 
-    handleRead(notification);
+    try {
+      await handleRead(notification);
+    } catch (error) {
+      // gagal tandai baca — tetap lanjut navigasi
+    }
+
     setOpen(false);
     navigate(path);
   };
@@ -169,7 +174,7 @@ export default function Navbar({
       await Swal.fire({
         icon: "success",
         title: "Logout Berhasil",
-        text: "Sampai jumpa kembali",
+        text: "Sampai jumpa kembali 👋",
         timer: 1500,
         showConfirmButton: false,
       });
@@ -222,12 +227,18 @@ export default function Navbar({
               />
             </button>
 
-            <div className="min-w-0">
-              <h1 className="truncate text-lg font-bold text-slate-800 sm:text-2xl">
+            <div className="min-w-0 flex-1">
+              <h1
+                className="break-words text-lg font-bold text-slate-800 sm:truncate sm:text-2xl"
+                title={title}
+              >
                 {title}
               </h1>
 
-              <p className="hidden truncate text-sm text-slate-500 sm:block">
+              <p
+                className="hidden truncate text-sm text-slate-500 sm:block"
+                title={subtitle}
+              >
                 {subtitle}
               </p>
             </div>
@@ -257,8 +268,10 @@ export default function Navbar({
                 )}
               </button>
 
-              {open && (
-                <div className="fixed inset-x-4 top-16 z-50 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl sm:absolute sm:inset-x-auto sm:right-0 sm:top-full sm:mt-2 sm:w-96">
+              {open &&
+                createPortal(
+                  <div className="fixed inset-0 z-[70] overflow-y-auto bg-slate-900/40 p-4 sm:inset-auto sm:absolute sm:right-0 sm:top-14 sm:mt-2 sm:w-96 sm:overflow-hidden sm:bg-transparent sm:p-0">
+                  <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl">
                   {/* Header panel */}
                   <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
                     <h3 className="text-sm font-bold text-slate-800">
@@ -298,13 +311,14 @@ export default function Navbar({
                       </p>
                     ) : (
                       notifications.map((notification) => {
-                        const Icon =
-                          typeIcons[notification.type] || Bell;
+                        const Icon = typeIcons[notification.type] || Bell;
 
                         return (
                           <button
                             key={notification.id}
-                            onClick={() => handleNotificationClick(notification)}
+                            onClick={() =>
+                              handleNotificationClick(notification)
+                            }
                             className={`
                               flex
                               w-full
@@ -363,9 +377,11 @@ export default function Navbar({
                         );
                       })
                     )}
+                    </div>
                   </div>
-                </div>
-              )}
+                  </div>,
+                  document.body,
+                )}
             </div>
 
             {/* Desktop User */}
@@ -393,58 +409,29 @@ export default function Navbar({
               </div>
             </div>
 
-            {/* Mobile Avatar */}
-            <button
-              className="
-                flex
-                h-10
-                w-10
-                items-center
-                justify-center
-                overflow-hidden
-                rounded-full
-                bg-cyan-100
-                text-cyan-700
-                lg:hidden
-              "
-            >
-              {avatarUrl ? (
-                <img
-                  src={avatarUrl}
-                  alt={displayName}
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center bg-cyan-100 text-xs font-bold text-cyan-700">
-                  {initials || <UserCircle2 size={18} />}
-                </div>
-              )}
-            </button>
-
-            <button
-              onClick={handleLogout}
-              className="
-                rounded-xl
-                border
-                border-slate-200
-                p-2
-                text-slate-600
-                transition-all
-                hover:border-red-300
-                hover:bg-red-50
-                hover:text-red-500
-                active:scale-90
-              "
-            >
-              <LogOut size={18} />
-            </button>
+            {/* Mobile Avatar & Logout — pindah ke sidebar mobile */}
+            <div className="hidden lg:block">
+              <button
+                onClick={handleLogout}
+                className="
+                  rounded-xl
+                  border
+                  border-slate-200
+                  p-2
+                  text-slate-600
+                  transition-all
+                  hover:border-red-300
+                  hover:bg-red-50
+                  hover:text-red-500
+                  active:scale-90
+                "
+              >
+                <LogOut size={18} />
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* Mobile Subtitle */}
-        <div className="mt-2 sm:hidden">
-          <p className="text-sm text-slate-500">{subtitle}</p>
-        </div>
       </div>
     </header>
   );
