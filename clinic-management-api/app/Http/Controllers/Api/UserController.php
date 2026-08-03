@@ -28,6 +28,11 @@ class UserController extends Controller
             $query->where('role', $request->query('role'));
         }
 
+        $query->orderBy(
+            $request->query('sort_by', 'created_at'),
+            $request->query('sort_dir', 'desc') === 'asc' ? 'asc' : 'desc'
+        );
+
         return UserResource::collection(
             $query->paginate($request->integer('per_page', 10))
         );

@@ -57,6 +57,11 @@ class MedicalRecordController extends Controller
             });
         }
 
+        $query->orderBy(
+            $request->query('sort_by', 'created_at'),
+            $request->query('sort_dir', 'desc') === 'asc' ? 'asc' : 'desc'
+        );
+
         return response()->json(
             $query->paginate($request->integer('per_page', 10))
         );

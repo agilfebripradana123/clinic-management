@@ -49,6 +49,11 @@ class BookingController extends Controller
             $query->whereDate('booking_date', $request->query('booking_date'));
         }
 
+        $query->orderBy(
+            $request->query('sort_by', 'created_at'),
+            $request->query('sort_dir', 'desc') === 'asc' ? 'asc' : 'desc'
+        );
+
         return response()->json(
             $query->paginate($request->integer('per_page', 10))
         );

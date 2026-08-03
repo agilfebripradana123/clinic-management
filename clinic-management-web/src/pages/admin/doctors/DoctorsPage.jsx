@@ -1,89 +1,61 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Eye, Pencil, Plus, Search, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import DashboardLayout from "../../../components/layout/DashboardLayout";
 import Card from "../../../components/ui/Card";
 import Input from "../../../components/ui/Input";
+import Badge from "../../../components/ui/Badge";
 import PaginationControls from "../../../components/ui/PaginationControls";
+import useRoleBase from "../../../hooks/useRoleBase";
 
 import { deleteDoctor, getDoctors } from "../../../services/doctorService";
 
 import { toast } from "../../../utils/toast";
 import { confirmDelete } from "../../../utils/confirm";
 
-import useAuth from "../../../hooks/useAuth";
-import useRoleBase from "../../../hooks/useRoleBase";
-
 export default function DoctorsPage() {
-  const { user } = useAuth();
-  const role = user?.role?.toLowerCase() || "admin";
   const roleBase = useRoleBase();
-  const isAdmin = role === "admin";
 
   const [doctors, setDoctors] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [total, setTotal] = useState(0);
   const [keyword, setKeyword] = useState("");
-  const [sortBy, setSortBy] = useState("name-asc");
+  const [sortBy, setSortBy] = useState("created_at-desc");
+  const [filterActive, setFilterActive] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
-  async function loadDoctors() {
+  const loadDoctors = useCallback(async () => {
+    setLoading(true);
+
     try {
-      const data = await getDoctors();
-      setDoctors(data);
+      const [sortField, sortDir] = sortBy.split("-");
+      const result = await getDoctors({
+        page: currentPage,
+        per_page: pageSize,
+        search: keyword,
+        sort_by: sortField,
+        sort_dir: sortDir,
+        ...(filterActive ? { is_active: filterActive === "true" } : {}),
+      });
+
+      setDoctors(result.data);
+      setTotal(result.total);
+    } catch (error) {
+      toast.error("Gagal memuat data dokter");
     } finally {
       setLoading(false);
     }
-  }
+  }, [currentPage, pageSize, keyword, sortBy, filterActive]);
 
   useEffect(() => {
     loadDoctors();
-  }, []);
-
-  const filteredDoctors = useMemo(() => {
-    const search = keyword.trim().toLowerCase();
-    const filtered = doctors.filter((doctor) => {
-      if (!search) return true;
-
-      return [
-        doctor.name,
-        doctor.email,
-        doctor.specialty,
-        doctor.phone,
-        doctor.address,
-      ]
-        .filter(Boolean)
-        .some((value) => String(value).toLowerCase().includes(search));
-    });
-
-    const [field, order] = sortBy.split("-");
-
-    return filtered.sort((a, b) => {
-      const first = String(a[field] ?? "").toLowerCase();
-      const second = String(b[field] ?? "").toLowerCase();
-
-      if (first < second) return order === "asc" ? -1 : 1;
-      if (first > second) return order === "asc" ? 1 : -1;
-      return 0;
-    });
-  }, [doctors, keyword, sortBy]);
-
-  const totalPages = Math.max(1, Math.ceil(filteredDoctors.length / pageSize));
-  const paginatedDoctors = useMemo(() => {
-    const start = (currentPage - 1) * pageSize;
-    return filteredDoctors.slice(start, start + pageSize);
-  }, [filteredDoctors, currentPage, pageSize]);
+  }, [loadDoctors]);
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [keyword, sortBy, pageSize]);
-
-  useEffect(() => {
-    if (currentPage > totalPages) {
-      setCurrentPage(totalPages);
-    }
-  }, [currentPage, totalPages]);
+  }, [keyword, sortBy, filterActive, pageSize]);
 
   const handleDelete = async (id) => {
     if (!(await confirmDelete("dokter"))) return;
@@ -92,6 +64,7 @@ export default function DoctorsPage() {
       await deleteDoctor(id);
 
       setDoctors((current) => current.filter((doctor) => doctor.id !== id));
+      setTotal((current) => Math.max(0, current - 1));
 
       toast.success("Dokter berhasil dihapus");
     } catch (error) {
@@ -104,11 +77,12 @@ export default function DoctorsPage() {
       title="Kelola Dokter"
       subtitle="Daftar dokter yang terdaftar di klinik"
     >
+      {/* Toolbar */}
       <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div className="flex w-full flex-col gap-3 md:w-auto md:flex-row">
           <div className="w-full md:w-72">
             <Input
-              placeholder="Cari dokter..."
+              placeholder="Cari nama, email, atau spesialis..."
               value={keyword}
               onChange={(e) => setKeyword(e.target.value)}
               icon={Search}
@@ -121,124 +95,143 @@ export default function DoctorsPage() {
             onChange={(e) => setSortBy(e.target.value)}
             className="min-w-[180px]"
           >
+            <option value="created_at-desc">Terbaru</option>
+            <option value="created_at-asc">Terlama</option>
             <option value="name-asc">Nama A-Z</option>
             <option value="name-desc">Nama Z-A</option>
-            <option value="specialty-asc">Spesialis A-Z</option>
-            <option value="specialty-desc">Spesialis Z-A</option>
+          </Input>
+
+          <Input
+            type="select"
+            value={filterActive}
+            onChange={(e) => setFilterActive(e.target.value)}
+            className="min-w-[150px]"
+          >
+            <option value="">Semua Status</option>
+            <option value="true">Aktif</option>
+            <option value="false">Nonaktif</option>
           </Input>
         </div>
 
-        {isAdmin && (
-          <Link
-            to={`${roleBase}/doctors/new`}
-            className="inline-flex items-center gap-2 rounded-2xl bg-cyan-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-cyan-600"
-          >
-            <Plus size={16} />
-            Tambah Dokter
-          </Link>
-        )}
+        <Link
+          to={`${roleBase}/doctors/new`}
+          className="inline-flex items-center justify-center gap-2 rounded-2xl bg-cyan-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-cyan-600"
+        >
+          <Plus size={16} />
+          Tambah Dokter
+        </Link>
       </div>
 
-      <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-        {loading ? (
-          <div className="rounded-2xl bg-white p-5 text-sm text-slate-500">
-            Memuat data dokter...
-          </div>
-        ) : filteredDoctors.length === 0 ? (
-          <div className="rounded-2xl bg-white p-5 text-sm text-slate-500">
-            Tidak ada data dokter yang cocok.
-          </div>
-        ) : (
-          paginatedDoctors.map((doctor) => (
-            <Card
-              key={doctor.id}
-              className="p-5 transition hover:-translate-y-1 hover:shadow-lg"
-            >
-              {/* Header */}
-              <div className="flex items-start justify-between">
-                <div>
-                  <h3 className="text-lg font-bold text-slate-900">
-                    {doctor.name}
-                  </h3>
+      {/* Tabel */}
+      <Card className="overflow-hidden p-0">
+        <div className="overflow-x-auto">
+          <table className="min-w-full">
+            <thead className="bg-slate-50">
+              <tr>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-slate-700">
+                  Nama
+                </th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-slate-700">
+                  Spesialis
+                </th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-slate-700">
+                  No. SIP
+                </th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-slate-700">
+                  Telepon
+                </th>
+                <th className="px-6 py-4 text-center text-sm font-semibold text-slate-700">
+                  Status
+                </th>
+                <th className="px-6 py-4 text-center text-sm font-semibold text-slate-700">
+                  Aksi
+                </th>
+              </tr>
+            </thead>
 
-                  <p className="text-sm text-slate-500">
-                    {doctor.email || "-"}
-                  </p>
-                </div>
+            <tbody className="divide-y divide-slate-100 bg-white">
+              {loading ? (
+                <tr>
+                  <td colSpan={6} className="py-10 text-center text-slate-500">
+                    Memuat data dokter...
+                  </td>
+                </tr>
+              ) : doctors.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="py-10 text-center text-slate-500">
+                    Tidak ada data dokter yang cocok.
+                  </td>
+                </tr>
+              ) : (
+                doctors.map((doctor) => (
+                  <tr key={doctor.id} className="hover:bg-slate-50">
+                    <td className="px-6 py-4">
+                      <p className="font-medium text-slate-800">
+                        {doctor.name}
+                      </p>
+                      <p className="text-sm text-slate-500">
+                        {doctor.email || "-"}
+                      </p>
+                    </td>
+                    <td className="px-6 py-4 text-slate-600">
+                      {doctor.specialty || "-"}
+                    </td>
+                    <td className="px-6 py-4 text-slate-600">
+                      {doctor.license_number || "-"}
+                    </td>
+                    <td className="px-6 py-4 text-slate-600">
+                      {doctor.phone || "-"}
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      {doctor.is_active ? (
+                        <Badge color="success">Aktif</Badge>
+                      ) : (
+                        <Badge color="danger">Nonaktif</Badge>
+                      )}
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex justify-center gap-2">
+                        <Link
+                          to={`${roleBase}/doctors/${doctor.id}`}
+                          className="rounded-xl bg-slate-900 p-2.5 text-white transition hover:opacity-90"
+                          title="Detail"
+                        >
+                          <Eye size={16} />
+                        </Link>
 
-                <span className="rounded-full bg-cyan-100 px-3 py-1 text-xs font-semibold text-cyan-700">
-                  {doctor.specialty || "-"}
-                </span>
-              </div>
+                        <Link
+                          to={`${roleBase}/doctors/${doctor.id}/edit`}
+                          className="rounded-xl bg-emerald-500 p-2.5 text-white transition hover:opacity-90"
+                          title="Edit"
+                        >
+                          <Pencil size={16} />
+                        </Link>
 
-              {/* Detail */}
-              <div className="mt-5 space-y-3 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-slate-500">No. SIP</span>
-
-                  <span className="font-medium text-slate-900">
-                    {doctor.license_number || "-"}
-                  </span>
-                </div>
-
-                <div className="flex justify-between">
-                  <span className="text-slate-500">Telepon</span>
-
-                  <span className="text-slate-700">{doctor.phone || "-"}</span>
-                </div>
-
-                <div className="flex justify-between items-start gap-4">
-                  <span className="text-slate-500">Alamat</span>
-
-                  <span className="max-w-[180px] break-words text-right text-slate-700">
-                    {doctor.address?.length > 30
-                      ? doctor.address.slice(0, 30) + "..."
-                      : doctor.address || "-"}
-                  </span>
-                </div>
-              </div>
-
-              {/* Action */}
-              {isAdmin && (
-                <div className="mt-6 flex gap-2">
-                  <Link
-                    to={`${roleBase}/doctors/${doctor.id}`}
-                    className="inline-flex items-center justify-center rounded-xl bg-slate-900 p-2.5 text-white transition hover:opacity-90"
-                    title="Detail"
-                  >
-                    <Eye size={16} />
-                  </Link>
-
-                  <Link
-                    to={`${roleBase}/doctors/${doctor.id}/edit`}
-                    className="inline-flex items-center justify-center rounded-xl bg-emerald-500 p-2.5 text-white transition hover:opacity-90"
-                    title="Edit"
-                  >
-                    <Pencil size={16} />
-                  </Link>
-
-                  <button
-                    type="button"
-                    onClick={() => handleDelete(doctor.id)}
-                    className="inline-flex items-center justify-center rounded-xl bg-rose-500 p-2.5 text-white transition hover:opacity-90"
-                    title="Hapus"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(doctor.id)}
+                          className="rounded-xl bg-rose-500 p-2.5 text-white transition hover:opacity-90"
+                          title="Hapus"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
               )}
-            </Card>
-          ))
-        )}
-      </div>
+            </tbody>
+          </table>
+        </div>
+      </Card>
 
       <PaginationControls
         currentPage={currentPage}
         setCurrentPage={setCurrentPage}
         pageSize={pageSize}
         setPageSize={setPageSize}
-        totalItems={filteredDoctors.length}
-        totalPages={totalPages}
+        totalItems={total}
+        totalPages={Math.max(1, Math.ceil(total / pageSize))}
       />
     </DashboardLayout>
   );

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Eye, Pencil, Plus, Trash2, Search } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -21,65 +21,43 @@ export default function UsersPage() {
   const roleBase = useRoleBase();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [total, setTotal] = useState(0);
   const [keyword, setKeyword] = useState("");
-  const [sortBy, setSortBy] = useState("name-asc");
+  const [sortBy, setSortBy] = useState("created_at-desc");
+  const [filterRole, setFilterRole] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
-  async function loadUsers() {
+  const loadUsers = useCallback(async () => {
+    setLoading(true);
+
     try {
-      const data = await getUsers();
-      setUsers(data);
+      const [sortField, sortDir] = sortBy.split("-");
+      const result = await getUsers({
+        page: currentPage,
+        per_page: pageSize,
+        search: keyword,
+        sort_by: sortField,
+        sort_dir: sortDir,
+        ...(filterRole ? { role: filterRole } : {}),
+      });
+
+      setUsers(result.data);
+      setTotal(result.total);
     } catch (error) {
       toast.error("Gagal memuat data user");
     } finally {
       setLoading(false);
     }
-  }
+  }, [currentPage, pageSize, keyword, sortBy, filterRole]);
 
   useEffect(() => {
     loadUsers();
-  }, []);
-
-  const filteredUsers = useMemo(() => {
-    const search = keyword.trim().toLowerCase();
-    const filtered = users.filter((user) => {
-      if (!search) return true;
-
-      return (
-        user.name.toLowerCase().includes(search) ||
-        user.email.toLowerCase().includes(search) ||
-        (user.role || "").toLowerCase().includes(search)
-      );
-    });
-
-    const [field, order] = sortBy.split("-");
-
-    return filtered.sort((a, b) => {
-      const first = String(a[field] ?? "").toLowerCase();
-      const second = String(b[field] ?? "").toLowerCase();
-
-      if (first < second) return order === "asc" ? -1 : 1;
-      if (first > second) return order === "asc" ? 1 : -1;
-      return 0;
-    });
-  }, [users, keyword, sortBy]);
-
-  const totalPages = Math.max(1, Math.ceil(filteredUsers.length / pageSize));
-  const paginatedUsers = useMemo(() => {
-    const start = (currentPage - 1) * pageSize;
-    return filteredUsers.slice(start, start + pageSize);
-  }, [filteredUsers, currentPage, pageSize]);
+  }, [loadUsers]);
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [keyword, sortBy, pageSize]);
-
-  useEffect(() => {
-    if (currentPage > totalPages) {
-      setCurrentPage(totalPages);
-    }
-  }, [currentPage, totalPages]);
+  }, [keyword, sortBy, filterRole, pageSize]);
 
   const handleDelete = async (id) => {
     if (!(await confirmDelete("user"))) return;
@@ -88,6 +66,7 @@ export default function UsersPage() {
       await deleteUser(id);
 
       setUsers((current) => current.filter((user) => user.id !== id));
+      setTotal((current) => Math.max(0, current - 1));
 
       toast.success("User berhasil dihapus");
     } catch (error) {
@@ -131,10 +110,22 @@ export default function UsersPage() {
             onChange={(e) => setSortBy(e.target.value)}
             className="min-w-[180px]"
           >
+            <option value="created_at-desc">Terbaru</option>
+            <option value="created_at-asc">Terlama</option>
             <option value="name-asc">Nama A-Z</option>
             <option value="name-desc">Nama Z-A</option>
-            <option value="email-asc">Email A-Z</option>
-            <option value="email-desc">Email Z-A</option>
+          </Input>
+
+          <Input
+            type="select"
+            value={filterRole}
+            onChange={(e) => setFilterRole(e.target.value)}
+            className="min-w-[150px]"
+          >
+            <option value="">Semua Role</option>
+            <option value="admin">Admin</option>
+            <option value="doctor">Dokter</option>
+            <option value="patient">Pasien</option>
           </Input>
         </div>
 
@@ -179,14 +170,14 @@ export default function UsersPage() {
                     Memuat data user...
                   </td>
                 </tr>
-              ) : filteredUsers.length === 0 ? (
+              ) : users.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="py-10 text-center text-slate-500">
                     Tidak ada data user.
                   </td>
                 </tr>
               ) : (
-                paginatedUsers.map((user) => (
+                users.map((user) => (
                   <tr key={user.id} className="hover:bg-slate-50">
                     <td className="px-6 py-4 font-medium text-slate-800">
                       {user.name}
@@ -240,8 +231,8 @@ export default function UsersPage() {
         setCurrentPage={setCurrentPage}
         pageSize={pageSize}
         setPageSize={setPageSize}
-        totalItems={filteredUsers.length}
-        totalPages={totalPages}
+        totalItems={total}
+        totalPages={Math.max(1, Math.ceil(total / pageSize))}
       />
     </DashboardLayout>
   );

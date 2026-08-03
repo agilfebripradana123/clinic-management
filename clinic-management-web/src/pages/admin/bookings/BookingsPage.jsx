@@ -1,97 +1,69 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Eye, Pencil, Plus, Search, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import DashboardLayout from "../../../components/layout/DashboardLayout";
 import Card from "../../../components/ui/Card";
 import Input from "../../../components/ui/Input";
+import Badge from "../../../components/ui/Badge";
 import PaginationControls from "../../../components/ui/PaginationControls";
-import useAuth from "../../../hooks/useAuth";
 import useRoleBase from "../../../hooks/useRoleBase";
 
 import { deleteBooking, getBookings } from "../../../services/bookingService";
 
 import { toast } from "../../../utils/toast";
 import { confirmDelete } from "../../../utils/confirm";
-import { DAY_LABELS } from "../../../utils/day";
 import { formatDate } from "../../../utils/format";
 
+const statusMeta = {
+  pending: { label: "Menunggu", color: "warning" },
+  confirmed: { label: "Dikonfirmasi", color: "info" },
+  completed: { label: "Selesai", color: "success" },
+  cancelled: { label: "Dibatalkan", color: "danger" },
+};
+
 export default function BookingsPage() {
-  const { user } = useAuth();
-  const role = user?.role?.toLowerCase() || "admin";
   const roleBase = useRoleBase();
-  const doctorId = user?.doctor?.id;
-  const patientId = user?.patient?.id;
 
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [total, setTotal] = useState(0);
   const [keyword, setKeyword] = useState("");
-  const [sortBy, setSortBy] = useState("booking_date-desc");
+  const [sortBy, setSortBy] = useState("created_at-desc");
+  const [filterStatus, setFilterStatus] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
-  async function loadBookings() {
+  const loadBookings = useCallback(async () => {
+    setLoading(true);
+
     try {
-      const data = await getBookings();
-      setBookings(data);
+      const [sortField, sortDir] = sortBy.split("-");
+      const result = await getBookings({
+        page: currentPage,
+        per_page: pageSize,
+        search: keyword,
+        sort_by: sortField,
+        sort_dir: sortDir,
+        ...(filterStatus ? { status: filterStatus } : {}),
+      });
+
+      setBookings(result.data);
+      setTotal(result.total);
+    } catch (error) {
+      toast.error("Gagal memuat data booking");
     } finally {
       setLoading(false);
     }
-  }
+  }, [currentPage, pageSize, keyword, sortBy, filterStatus]);
 
   useEffect(() => {
     loadBookings();
-  }, []);
-
-  const filteredBookings = useMemo(() => {
-    const search = keyword.trim().toLowerCase();
-    const filtered = bookings.filter((booking) => {
-      if (!search) return true;
-
-      return [
-        booking.patient_name,
-        booking.doctor_name,
-        booking.booking_code,
-        booking.specialist,
-        booking.status,
-      ]
-        .filter(Boolean)
-        .some((value) => String(value).toLowerCase().includes(search));
-    });
-
-    const [field, order] = sortBy.split("-");
-
-    return filtered.sort((a, b) => {
-      const first = String(a[field] ?? "").toLowerCase();
-      const second = String(b[field] ?? "").toLowerCase();
-
-      if (field === "booking_date") {
-        return order === "asc"
-          ? new Date(a.booking_date) - new Date(b.booking_date)
-          : new Date(b.booking_date) - new Date(a.booking_date);
-      }
-
-      if (first < second) return order === "asc" ? -1 : 1;
-      if (first > second) return order === "asc" ? 1 : -1;
-      return 0;
-    });
-  }, [bookings, keyword, sortBy]);
-
-  const totalPages = Math.max(1, Math.ceil(filteredBookings.length / pageSize));
-  const paginatedBookings = useMemo(() => {
-    const start = (currentPage - 1) * pageSize;
-    return filteredBookings.slice(start, start + pageSize);
-  }, [filteredBookings, currentPage, pageSize]);
+  }, [loadBookings]);
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [keyword, sortBy, pageSize]);
-
-  useEffect(() => {
-    if (currentPage > totalPages) {
-      setCurrentPage(totalPages);
-    }
-  }, [currentPage, totalPages]);
+  }, [keyword, sortBy, filterStatus, pageSize]);
 
   const handleDelete = async (id) => {
     if (!(await confirmDelete("booking"))) return;
@@ -100,6 +72,7 @@ export default function BookingsPage() {
       await deleteBooking(id);
 
       setBookings((current) => current.filter((booking) => booking.id !== id));
+      setTotal((current) => Math.max(0, current - 1));
 
       toast.success("Booking berhasil dihapus");
     } catch (error) {
@@ -112,11 +85,12 @@ export default function BookingsPage() {
       title="Kelola Booking"
       subtitle="Daftar booking pemeriksaan pasien"
     >
+      {/* Toolbar */}
       <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div className="flex w-full flex-col gap-3 md:w-auto md:flex-row">
           <div className="w-full md:w-72">
             <Input
-              placeholder="Cari booking..."
+              placeholder="Cari kode booking, pasien, atau dokter..."
               value={keyword}
               onChange={(e) => setKeyword(e.target.value)}
               icon={Search}
@@ -125,150 +99,158 @@ export default function BookingsPage() {
 
           <Input
             type="select"
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
+            className="min-w-[170px]"
+          >
+            <option value="">Semua Status</option>
+            <option value="pending">Menunggu</option>
+            <option value="confirmed">Dikonfirmasi</option>
+            <option value="completed">Selesai</option>
+            <option value="cancelled">Dibatalkan</option>
+          </Input>
+
+          <Input
+            type="select"
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
-            className="min-w-[200px]"
+            className="min-w-[180px]"
           >
+            <option value="created_at-desc">Terbaru</option>
+            <option value="created_at-asc">Terlama</option>
             <option value="booking_date-desc">Tanggal Terbaru</option>
             <option value="booking_date-asc">Tanggal Terlama</option>
-            <option value="patient_name-asc">Pasien A-Z</option>
-            <option value="patient_name-desc">Pasien Z-A</option>
           </Input>
         </div>
 
         <Link
           to={`${roleBase}/bookings/new`}
-          className="inline-flex items-center gap-2 rounded-2xl bg-cyan-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-cyan-600"
+          className="inline-flex items-center justify-center gap-2 rounded-2xl bg-cyan-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-cyan-600"
         >
           <Plus size={16} />
           Tambah Booking
         </Link>
       </div>
 
-      <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-        {loading ? (
-          <div className="rounded-2xl bg-white p-5 text-sm text-slate-500">
-            Memuat data booking...
-          </div>
-        ) : filteredBookings.length === 0 ? (
-          <div className="rounded-2xl bg-white p-5 text-sm text-slate-500">
-            Tidak ada data booking yang cocok.
-          </div>
-        ) : (
-          paginatedBookings.map((booking) => (
-            <Card key={booking.id} className="p-5">
-              {/* Header */}
-              <div className="flex items-start justify-between">
-                <div>
-                  <h3 className="text-lg font-bold text-slate-900">
-                    {booking.patient_name}
-                  </h3>
+      {/* Tabel */}
+      <Card className="overflow-hidden p-0">
+        <div className="overflow-x-auto">
+          <table className="min-w-full">
+            <thead className="bg-slate-50">
+              <tr>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-slate-700">
+                  Kode
+                </th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-slate-700">
+                  Pasien
+                </th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-slate-700">
+                  Dokter
+                </th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-slate-700">
+                  Tanggal
+                </th>
+                <th className="px-6 py-4 text-center text-sm font-semibold text-slate-700">
+                  Antrian
+                </th>
+                <th className="px-6 py-4 text-center text-sm font-semibold text-slate-700">
+                  Status
+                </th>
+                <th className="px-6 py-4 text-center text-sm font-semibold text-slate-700">
+                  Aksi
+                </th>
+              </tr>
+            </thead>
 
-                  <p className="text-sm text-slate-500">
-                    {booking.booking_code}
-                  </p>
-                </div>
+            <tbody className="divide-y divide-slate-100 bg-white">
+              {loading ? (
+                <tr>
+                  <td colSpan={7} className="py-10 text-center text-slate-500">
+                    Memuat data booking...
+                  </td>
+                </tr>
+              ) : bookings.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="py-10 text-center text-slate-500">
+                    Tidak ada data booking yang cocok.
+                  </td>
+                </tr>
+              ) : (
+                bookings.map((booking) => {
+                  const status = statusMeta[booking.status] || {
+                    label: booking.status,
+                    color: "gray",
+                  };
 
-                <span
-                  className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                    booking.status === "completed"
-                      ? "bg-emerald-100 text-emerald-700"
-                      : booking.status === "confirmed"
-                        ? "bg-sky-100 text-sky-700"
-                        : booking.status === "cancelled"
-                          ? "bg-rose-100 text-rose-700"
-                          : "bg-amber-100 text-amber-700"
-                  }`}
-                >
-                  {booking.status === "pending"
-                    ? "Menunggu"
-                    : booking.status === "confirmed"
-                      ? "Dikonfirmasi"
-                      : booking.status === "completed"
-                        ? "Selesai"
-                        : booking.status === "cancelled"
-                          ? "Dibatalkan"
-                          : booking.status}
-                </span>
-              </div>
+                  return (
+                    <tr key={booking.id} className="hover:bg-slate-50">
+                      <td className="px-6 py-4 font-medium text-slate-800">
+                        {booking.booking_code || "-"}
+                      </td>
+                      <td className="px-6 py-4 text-slate-600">
+                        {booking.patient_name || "-"}
+                      </td>
+                      <td className="px-6 py-4">
+                        <p className="text-slate-700">
+                          {booking.doctor_name || "-"}
+                        </p>
+                        <p className="text-sm text-slate-500">
+                          {booking.specialist || ""}
+                        </p>
+                      </td>
+                      <td className="px-6 py-4 text-slate-600">
+                        {formatDate(booking.booking_date)}
+                      </td>
+                      <td className="px-6 py-4 text-center text-slate-600">
+                        {booking.queue_number || "-"}
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        <Badge color={status.color}>{status.label}</Badge>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex justify-center gap-2">
+                          <Link
+                            to={`${roleBase}/bookings/${booking.id}`}
+                            className="rounded-xl bg-slate-900 p-2.5 text-white transition hover:opacity-90"
+                            title="Detail"
+                          >
+                            <Eye size={16} />
+                          </Link>
 
-              {/* Detail */}
-              <div className="mt-5 space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-slate-500">Dokter</span>
+                          <Link
+                            to={`${roleBase}/bookings/${booking.id}/edit`}
+                            className="rounded-xl bg-emerald-500 p-2.5 text-white transition hover:opacity-90"
+                            title="Edit"
+                          >
+                            <Pencil size={16} />
+                          </Link>
 
-                  <span className="font-medium">{booking.doctor_name}</span>
-                </div>
-
-                <div className="flex justify-between">
-                  <span className="text-slate-500">Spesialis</span>
-
-                  <span>{booking.specialist}</span>
-                </div>
-
-                <div className="flex justify-between">
-                  <span className="text-slate-500">Hari</span>
-
-                  <span>{DAY_LABELS[booking.day] ?? booking.day ?? "-"}</span>
-                </div>
-
-                <div className="flex justify-between">
-                  <span className="text-slate-500">Jam</span>
-
-                  <span>
-                    {booking.time ||
-                      `${booking.start_time ?? "-"} - ${booking.end_time ?? "-"}`}
-                  </span>
-                </div>
-
-                <div className="flex justify-between">
-                  <span className="text-slate-500">Tanggal</span>
-
-                  <span>{formatDate(booking.booking_date)}</span>
-                </div>
-
-                <div className="flex justify-between">
-                  <span className="text-slate-500">Nomor Antrian</span>
-
-                  <span>{booking.queue_number || "-"}</span>
-                </div>
-              </div>
-
-              {/* Action */}
-              <div className="mt-5 flex gap-2">
-                <Link
-                  to={`/bookings/${booking.id}`}
-                  className="inline-flex items-center justify-center rounded-xl bg-slate-900 p-2.5 text-white hover:opacity-90"
-                >
-                  <Eye size={16} />
-                </Link>
-
-                <Link
-                  to={`/bookings/${booking.id}/edit`}
-                  className="inline-flex items-center justify-center rounded-xl bg-emerald-500 p-2.5 text-white hover:opacity-90"
-                >
-                  <Pencil size={16} />
-                </Link>
-
-                <button
-                  onClick={() => handleDelete(booking.id)}
-                  className="inline-flex items-center justify-center rounded-xl bg-rose-500 p-2.5 text-white hover:opacity-90"
-                >
-                  <Trash2 size={16} />
-                </button>
-              </div>
-            </Card>
-          ))
-        )}
-      </div>
+                          <button
+                            type="button"
+                            onClick={() => handleDelete(booking.id)}
+                            className="rounded-xl bg-rose-500 p-2.5 text-white transition hover:opacity-90"
+                            title="Hapus"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+      </Card>
 
       <PaginationControls
         currentPage={currentPage}
         setCurrentPage={setCurrentPage}
         pageSize={pageSize}
         setPageSize={setPageSize}
-        totalItems={filteredBookings.length}
-        totalPages={totalPages}
+        totalItems={total}
+        totalPages={Math.max(1, Math.ceil(total / pageSize))}
       />
     </DashboardLayout>
   );
