@@ -118,6 +118,13 @@ export const cancelBooking = async (id) => {
   return response.data;
 };
 
+// Ubah status booking (digunakan role doctor/admin).
+export const updateBookingStatus = async (id, status) => {
+  const response = await api.put(`/bookings/${id}`, { status });
+
+  return response.data;
+};
+
 export const getBookingCount = async () => {
   try {
     const { total } = await getBookings({ per_page: 1 });

@@ -16,6 +16,7 @@ import {
 
 import { toast } from "../../../utils/toast";
 import useRoleBase from "../../../hooks/useRoleBase";
+import useAuth from "../../../hooks/useAuth";
 
 const defaultForm = {
   booking_id: "",
@@ -30,6 +31,8 @@ export default function MedicalRecordFormPage() {
   const navigate = useNavigate();
   const { id } = useParams();
   const roleBase = useRoleBase();
+  const { user } = useAuth();
+  const doctorId = user?.doctor_id;
 
   const isEditMode = Boolean(id);
 
@@ -55,7 +58,10 @@ export default function MedicalRecordFormPage() {
 
   async function loadBookings() {
     try {
-      const response = await api.get("/medical-records/available-bookings");
+      const params = doctorId ? `?doctor_id=${doctorId}` : "";
+      const response = await api.get(
+        `/medical-records/available-bookings${params}`,
+      );
       setBookings(response.data);
     } catch (error) {
       toast.error("Gagal mengambil data booking.");

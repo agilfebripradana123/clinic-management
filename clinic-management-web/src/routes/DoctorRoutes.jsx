@@ -2,6 +2,8 @@ import Dashboard from "../pages/doctor/Dashboard";
 import SchedulesPage from "../pages/doctor/schedules/SchedulesPage";
 import ScheduleFormPage from "../pages/doctor/schedules/ScheduleFormPage";
 import ScheduleDetailPage from "../pages/doctor/schedules/ScheduleDetailPage";
+import BookingsPage from "../pages/doctor/bookings/BookingsPage";
+import BookingDetailPage from "../pages/doctor/bookings/BookingDetailPage";
 import PatientsPage from "../pages/doctor/patients/PatientsPage";
 import PatientDetailPage from "../pages/doctor/patients/PatientDetailPage";
 import MedicalRecordsPage from "../pages/doctor/medical-records/MedicalRecordsPage";
@@ -10,7 +12,7 @@ import MedicalRecordDetailPage from "../pages/doctor/medical-records/MedicalReco
 
 // Definisi rute khusus role doctor.
 // Path relatif terhadap <ProtectedRoute roles={["doctor"]} />.
-// Dokter: lihat jadwal & kelola jadwal praktik, lihat pasien, kelola rekam medis.
+// Dokter: lihat jadwal & kelola jadwal praktik, kelola booking, lihat pasien, kelola rekam medis.
 const doctorRoutes = [
   { path: "doctor/dashboard", element: <Dashboard /> },
 
@@ -19,6 +21,10 @@ const doctorRoutes = [
   { path: "doctor/schedules/new", element: <ScheduleFormPage /> },
   { path: "doctor/schedules/:id", element: <ScheduleDetailPage /> },
   { path: "doctor/schedules/:id/edit", element: <ScheduleFormPage /> },
+
+  // Booking
+  { path: "doctor/bookings", element: <BookingsPage /> },
+  { path: "doctor/bookings/:id", element: <BookingDetailPage /> },
 
   // Daftar Pasien
   { path: "doctor/patients", element: <PatientsPage /> },

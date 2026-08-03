@@ -29,6 +29,7 @@ const roleMenus = {
   doctor: [
     { to: "/doctor/dashboard", icon: LayoutDashboard, title: "Dashboard Dokter" },
     { to: "/schedules", icon: CalendarDays, title: "Jadwal Praktik" },
+    { to: "/bookings", icon: ClipboardList, title: "Booking" },
     { to: "/patients", icon: Users, title: "Daftar Pasien" },
     { to: "/medical-records", icon: FileText, title: "Rekam Medis" },
     { to: "/profile", icon: Shield, title: "Profil" },

@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\DB;
 
 class MedicalRecordController extends Controller
 {
-    public function availableBookings()
+    public function availableBookings(Request $request)
     {
         $bookings = Booking::with([
             'patient.user',
@@ -18,9 +18,14 @@ class MedicalRecordController extends Controller
             'schedule',
         ])
         ->whereDoesntHave('medicalRecord')
-        ->whereIn('status', ['confirmed', 'completed'])
-        ->latest()
-        ->get();
+        ->whereIn('status', ['confirmed', 'completed']);
+
+        // Filter hanya booking milik dokter tertentu (untuk role doctor)
+        if ($request->has('doctor_id')) {
+            $bookings->where('doctor_id', $request->integer('doctor_id'));
+        }
+
+        $bookings = $bookings->latest()->get();
 
         return response()->json($bookings);
     }
