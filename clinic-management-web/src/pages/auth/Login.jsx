@@ -15,12 +15,34 @@ export default function Login() {
   const navigate = useNavigate();
   const { login } = useAuth();
 
-  const [email, setEmail] = useState("admin@clinic.com");
-  const [password, setPassword] = useState("password");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Validasi client-side
+    const nextErrors = {};
+
+    if (!email.trim()) {
+      nextErrors.email = "Email wajib diisi.";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      nextErrors.email = "Format email tidak valid.";
+    }
+
+    if (!password) {
+      nextErrors.password = "Password wajib diisi.";
+    } else if (password.length < 6) {
+      nextErrors.password = "Password minimal 6 karakter.";
+    }
+
+    setErrors(nextErrors);
+
+    if (Object.keys(nextErrors).length > 0) {
+      return;
+    }
 
     try {
       setLoading(true);
@@ -84,23 +106,35 @@ export default function Login() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <Input
-            label="Email"
-            icon={Mail}
-            type="email"
-            placeholder="admin@clinic.com"
-            value={email}
-            onChange={({ target }) => setEmail(target.value)}
-          />
+          <div>
+            <Input
+              label="Email"
+              icon={Mail}
+              type="email"
+              placeholder="nama@mail.com"
+              value={email}
+              onChange={({ target }) => setEmail(target.value)}
+            />
 
-          <Input
-            label="Password"
-            icon={Lock}
-            type="password"
-            placeholder="••••••••"
-            value={password}
-            onChange={({ target }) => setPassword(target.value)}
-          />
+            {errors.email && (
+              <p className="mt-1 text-sm text-rose-600">{errors.email}</p>
+            )}
+          </div>
+
+          <div>
+            <Input
+              label="Password"
+              icon={Lock}
+              type="password"
+              placeholder="••••••••"
+              value={password}
+              onChange={({ target }) => setPassword(target.value)}
+            />
+
+            {errors.password && (
+              <p className="mt-1 text-sm text-rose-600">{errors.password}</p>
+            )}
+          </div>
 
           <Button type="submit" loading={loading} icon={ArrowRight}>
             Sign In
@@ -113,7 +147,7 @@ export default function Login() {
         >
           Belum punya akun?{" "}
           <Link to="/register" className="font-semibold text-cyan-600">
-            Register
+            Daftar Akun Pasien
           </Link>
         </div>
 

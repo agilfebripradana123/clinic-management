@@ -15,11 +15,12 @@ export default function RegisterPage() {
     name: "",
     email: "",
     password: "",
-    gender: "P",
+    gender: "",
     birth_date: "",
     phone: "",
     address: "",
   });
+  const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
   const handleChange = (event) => {
@@ -30,10 +31,45 @@ export default function RegisterPage() {
   const handleSubmit = async (event) => {
     event.preventDefault();
 
+    // Validasi client-side
+    const nextErrors = {};
+
+    if (!form.name.trim()) {
+      nextErrors.name = "Nama wajib diisi.";
+    }
+
+    if (!form.email.trim()) {
+      nextErrors.email = "Email wajib diisi.";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+      nextErrors.email = "Format email tidak valid.";
+    }
+
+    if (!form.password) {
+      nextErrors.password = "Password wajib diisi.";
+    } else if (form.password.length < 8) {
+      nextErrors.password = "Password minimal 8 karakter.";
+    }
+
+    setErrors(nextErrors);
+
+    if (Object.keys(nextErrors).length > 0) {
+      return;
+    }
+
     try {
       setLoading(true);
 
-      const response = await register(form);
+      const payload = {
+        name: form.name,
+        email: form.email,
+        password: form.password,
+        gender: form.gender || null,
+        birth_date: form.birth_date || null,
+        phone: form.phone || null,
+        address: form.address || null,
+      };
+
+      const response = await register(payload);
       localStorage.setItem("token", response.token);
       localStorage.setItem("user", JSON.stringify(response.user));
 
@@ -80,39 +116,56 @@ export default function RegisterPage() {
               value={form.name}
               onChange={handleChange}
             />
+
+            {errors.name && (
+              <p className="mt-1 text-sm text-rose-600">{errors.name}</p>
+            )}
+          </div>
+
+          <div>
+            <Input
+              label="Email"
+              type="email"
+              name="email"
+              placeholder="contoh@mail.com"
+              value={form.email}
+              onChange={handleChange}
+            />
+
+            {errors.email && (
+              <p className="mt-1 text-sm text-rose-600">{errors.email}</p>
+            )}
+          </div>
+
+          <div>
+            <Input
+              label="Password"
+              type="password"
+              name="password"
+              placeholder="Minimal 8 karakter"
+              value={form.password}
+              onChange={handleChange}
+            />
+
+            {errors.password && (
+              <p className="mt-1 text-sm text-rose-600">{errors.password}</p>
+            )}
           </div>
 
           <Input
-            label="Email"
-            type="email"
-            name="email"
-            placeholder="contoh@mail.com"
-            value={form.email}
-            onChange={handleChange}
-          />
-
-          <Input
-            label="Password"
-            type="password"
-            name="password"
-            placeholder="••••••••"
-            value={form.password}
-            onChange={handleChange}
-          />
-
-          <Input
-            label="Jenis Kelamin"
+            label="Jenis Kelamin (opsional)"
             type="select"
             name="gender"
             value={form.gender}
             onChange={handleChange}
           >
+            <option value="">Pilih</option>
             <option value="L">Laki-laki</option>
             <option value="P">Perempuan</option>
           </Input>
 
           <Input
-            label="Tanggal Lahir"
+            label="Tanggal Lahir (opsional)"
             type="date"
             name="birth_date"
             value={form.birth_date}
@@ -120,7 +173,7 @@ export default function RegisterPage() {
           />
 
           <Input
-            label="Nomor Telepon"
+            label="Nomor Telepon (opsional)"
             name="phone"
             placeholder="081234567890"
             value={form.phone}
@@ -129,7 +182,7 @@ export default function RegisterPage() {
 
           <div className="md:col-span-2">
             <Input
-              label="Alamat"
+              label="Alamat (opsional)"
               name="address"
               placeholder="Masukkan alamat lengkap"
               value={form.address}

@@ -1,4 +1,4 @@
-import api, { buildQuery } from "./api";
+import api, { buildQuery, extractPageMeta } from "./api";
 
 const endpoint = "/users";
 
@@ -13,13 +13,12 @@ const normalize = (payload = {}) => ({
 
 export async function getUsers(params = {}) {
   const { data } = await api.get(`${endpoint}${buildQuery(params)}`);
-
-  const list = Array.isArray(data?.data) ? data.data : data;
+  const { list, total, lastPage } = extractPageMeta(data);
 
   return {
     data: list.map(normalize),
-    total: data?.meta?.total ?? list.length,
-    lastPage: data?.meta?.last_page ?? 1,
+    total,
+    lastPage,
   };
 }
 

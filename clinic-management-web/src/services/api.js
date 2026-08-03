@@ -13,6 +13,21 @@ export const buildQuery = (params = {}) => {
   return qs ? `?${qs}` : "";
 };
 
+// Normalisasi respons list:
+// - paginate() Laravel → total/last_page di level atas
+// - Resource collection → { meta: { total, last_page } }
+// Mengembalikan { list, total, lastPage }.
+export const extractPageMeta = (body = {}) => {
+  const meta = body.meta ?? body;
+  const list = Array.isArray(body.data) ? body.data : body;
+
+  return {
+    list,
+    total: meta?.total ?? list.length,
+    lastPage: meta?.last_page ?? 1,
+  };
+};
+
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
   headers: {

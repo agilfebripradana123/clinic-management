@@ -1,4 +1,4 @@
-import api, { buildQuery } from "./api";
+import api, { buildQuery, extractPageMeta } from "./api";
 import { formatDate } from "../utils/format";
 
 const fallbackBookings = [];
@@ -69,12 +69,12 @@ const mapBookingPayload = (payload) => ({
 export const getBookings = async (params = {}) => {
   try {
     const response = await api.get(`/bookings${buildQuery(params)}`);
-    const body = response.data;
+    const { list, total, lastPage } = extractPageMeta(response.data);
 
     return {
-      data: normalizeList(body.data ?? body).map(normalizeRecord),
-      total: body.meta?.total ?? (Array.isArray(body) ? body.length : 0),
-      lastPage: body.meta?.last_page ?? 1,
+      data: normalizeList(list).map(normalizeRecord),
+      total,
+      lastPage,
     };
   } catch (error) {
     console.warn("Booking endpoint unavailable.", error);

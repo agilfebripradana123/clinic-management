@@ -1,4 +1,4 @@
-import api, { buildQuery } from "./api";
+import api, { buildQuery, extractPageMeta } from "./api";
 
 const fallbackPatients = [
   {
@@ -72,12 +72,12 @@ const mapPatientPayload = (payload) => {
 export const getPatients = async (params = {}) => {
   try {
     const response = await api.get(`/patients${buildQuery(params)}`);
-    const body = response.data;
+    const { list, total, lastPage } = extractPageMeta(response.data);
 
     return {
-      data: normalizeList(body.data ?? body).map(normalizeRecord),
-      total: body.meta?.total ?? (Array.isArray(body) ? body.length : 0),
-      lastPage: body.meta?.last_page ?? 1,
+      data: normalizeList(list).map(normalizeRecord),
+      total,
+      lastPage,
     };
   } catch (error) {
     console.warn("Patients endpoint unavailable, using fallback data.", error);
