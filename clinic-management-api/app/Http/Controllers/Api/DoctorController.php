@@ -29,10 +29,19 @@ class DoctorController extends Controller
             $query->where('is_active', $request->boolean('is_active'));
         }
 
-        $query->orderBy(
-            $request->query('sort_by', 'created_at'),
-            $request->query('sort_dir', 'desc') === 'asc' ? 'asc' : 'desc'
-        );
+        // Sort: whitelist kolom + subquery untuk kolom relasi (name dari users)
+        $sortBy = $request->query('sort_by', 'created_at');
+        $sortDir = $request->query('sort_dir', 'desc') === 'asc' ? 'asc' : 'desc';
+
+        $sortColumns = [
+            'created_at' => 'created_at',
+            'name' => User::select('name')
+                ->whereColumn('users.id', 'doctors.user_id'),
+        ];
+
+        if (isset($sortColumns[$sortBy])) {
+            $query->orderBy($sortColumns[$sortBy], $sortDir);
+        }
 
         return response()->json(
             $query->paginate($request->integer('per_page', 10))
