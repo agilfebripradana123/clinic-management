@@ -15,7 +15,7 @@ class UserController extends Controller
      */
     public function index(Request $request)
     {
-        $query = User::latest();
+        $query = User::query();
 
         if ($search = $request->query('search')) {
             $query->where(function ($q) use ($search) {
@@ -28,10 +28,17 @@ class UserController extends Controller
             $query->where('role', $request->query('role'));
         }
 
-        $query->orderBy(
-            $request->query('sort_by', 'created_at'),
-            $request->query('sort_dir', 'desc') === 'asc' ? 'asc' : 'desc'
-        );
+        $sortBy = $request->query('sort_by', 'created_at');
+        $sortDir = $request->query('sort_dir', 'desc') === 'asc' ? 'asc' : 'desc';
+
+        $sortColumns = [
+            'created_at' => 'created_at',
+            'name' => 'name',
+        ];
+
+        $column = $sortColumns[$sortBy] ?? $sortColumns['created_at'];
+
+        $query->orderBy($column, $sortDir);
 
         return UserResource::collection(
             $query->paginate($request->integer('per_page', 10))

@@ -13,7 +13,7 @@ class PatientController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Patient::with('user')->latest();
+        $query = Patient::with('user');
 
         if ($search = $request->query('search')) {
             $query->where(function ($q) use ($search) {
@@ -30,7 +30,6 @@ class PatientController extends Controller
             $query->where('is_active', $request->boolean('is_active'));
         }
 
-        // Sort: whitelist kolom + subquery untuk kolom relasi (name dari users)
         $sortBy = $request->query('sort_by', 'created_at');
         $sortDir = $request->query('sort_dir', 'desc') === 'asc' ? 'asc' : 'desc';
 
@@ -40,9 +39,9 @@ class PatientController extends Controller
                 ->whereColumn('users.id', 'patients.user_id'),
         ];
 
-        if (isset($sortColumns[$sortBy])) {
-            $query->orderBy($sortColumns[$sortBy], $sortDir);
-        }
+        $column = $sortColumns[$sortBy] ?? $sortColumns['created_at'];
+
+        $query->orderBy($column, $sortDir);
 
         return response()->json(
             $query->paginate($request->integer('per_page', 10))

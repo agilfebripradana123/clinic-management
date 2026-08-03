@@ -35,7 +35,7 @@ class MedicalRecordController extends Controller
             'booking.patient.user',
             'booking.doctor.user',
             'booking.schedule',
-        ])->latest();
+        ]);
 
         if ($request->has('doctor_id')) {
             $query->whereHas('booking', function ($bq) use ($request) {
@@ -62,7 +62,6 @@ class MedicalRecordController extends Controller
             });
         }
 
-        // Sort: whitelist kolom + subquery untuk kolom relasi (booking_date)
         $sortBy = $request->query('sort_by', 'created_at');
         $sortDir = $request->query('sort_dir', 'desc') === 'asc' ? 'asc' : 'desc';
 
@@ -72,9 +71,9 @@ class MedicalRecordController extends Controller
                 ->whereColumn('bookings.id', 'medical_records.booking_id'),
         ];
 
-        if (isset($sortColumns[$sortBy])) {
-            $query->orderBy($sortColumns[$sortBy], $sortDir);
-        }
+        $column = $sortColumns[$sortBy] ?? $sortColumns['created_at'];
+
+        $query->orderBy($column, $sortDir);
 
         return response()->json(
             $query->paginate($request->integer('per_page', 10))

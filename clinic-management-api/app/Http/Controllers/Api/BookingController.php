@@ -18,7 +18,7 @@ class BookingController extends Controller
             'doctor.user',
             'patient.user',
             'schedule',
-        ])->latest();
+        ]);
 
         if ($search = $request->query('search')) {
             $query->where(function ($q) use ($search) {
@@ -49,10 +49,17 @@ class BookingController extends Controller
             $query->whereDate('booking_date', $request->query('booking_date'));
         }
 
-        $query->orderBy(
-            $request->query('sort_by', 'created_at'),
-            $request->query('sort_dir', 'desc') === 'asc' ? 'asc' : 'desc'
-        );
+        $sortBy = $request->query('sort_by', 'created_at');
+        $sortDir = $request->query('sort_dir', 'desc') === 'asc' ? 'asc' : 'desc';
+
+        $sortColumns = [
+            'created_at' => 'created_at',
+            'booking_date' => 'booking_date',
+        ];
+
+        $column = $sortColumns[$sortBy] ?? $sortColumns['created_at'];
+
+        $query->orderBy($column, $sortDir);
 
         return response()->json(
             $query->paginate($request->integer('per_page', 10))
