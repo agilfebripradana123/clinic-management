@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "goey-toast": "^0.5.0",
+    "sweetalert2": "^11.26.25"
+  }
+}

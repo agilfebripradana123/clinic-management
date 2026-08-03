@@ -1,0 +1,119 @@
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Models\Doctor;
+use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+
+class DoctorController extends Controller
+{
+    public function index()
+    {
+        return response()->json(Doctor::with('user')->latest()->get());
+    }
+
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'name'       => 'required|string|max:255',
+            'email'      => 'required|email|unique:users,email',
+            'password'   => 'required|min:8',
+            'specialty'  => 'required|string|max:255',
+            'phone'      => 'required|string|max:20',
+            'address'    => 'required|string',
+            'photo'      => 'nullable|string',
+        ]);
+
+        $doctor = DB::transaction(function () use ($validated) {
+
+            // Buat akun user dokter
+            $user = User::create([
+                'role'     => 'doctor',
+                'name'     => $validated['name'],
+                'email'    => $validated['email'],
+                'password' => $validated['password'], // otomatis di-hash oleh cast di User
+            ]);
+
+            // Buat data dokter
+            return Doctor::create([
+                'user_id'         => $user->id,
+                'license_number'  => 'DOC-' . time(),
+                'specialist'      => $validated['specialty'],
+                'phone'           => $validated['phone'],
+                'address'         => $validated['address'],
+                'photo'           => $validated['photo'] ?? null,
+            ]);
+        });
+
+        return response()->json([
+            'message' => 'Doctor created successfully',
+            'data'    => $doctor->load('user'),
+        ], 201);
+    }
+
+    public function show(Doctor $doctor)
+    {
+        return response()->json($doctor->load('user'));
+    } 
+
+    public function update(Request $request, Doctor $doctor)
+    {
+        $validated = $request->validate([
+            'name'      => 'required|string|max:255',
+            'email'     => 'required|email|unique:users,email,' . $doctor->user_id,
+            'password'  => 'nullable|min:8',
+            'specialty' => 'required|string|max:255',
+            'phone'     => 'required|string|max:20',
+            'address'   => 'required|string',
+            'photo'     => 'nullable|string',
+        ]);
+
+        DB::transaction(function () use ($doctor, $validated) {
+
+            // ==========================
+            // Update data user
+            // ==========================
+            $userData = [
+                'name'  => $validated['name'],
+                'email' => $validated['email'],
+            ];
+
+            // Password hanya diubah jika diisi
+            if (!empty($validated['password'])) {
+                $userData['password'] = $validated['password'];
+            }
+
+            $doctor->user()->update($userData);
+
+            // ==========================
+            // Update data doctor
+            // ==========================
+            $doctor->update([
+                'specialist' => $validated['specialty'],
+                'phone'      => $validated['phone'],
+                'address'    => $validated['address'],
+                'photo'      => $validated['photo'] ?? $doctor->photo,
+            ]);
+        });
+
+        return response()->json([
+            'message' => 'Doctor updated successfully',
+            'data'    => $doctor->fresh()->load('user'),
+        ]);
+    }
+
+    public function destroy(Doctor $doctor)
+    {
+        DB::transaction(function () use ($doctor) {
+            $doctor->user()->delete(); // hapus akun user
+            $doctor->delete();         // hapus data dokter
+        });
+
+        return response()->json([
+            'message' => 'Doctor deleted successfully',
+        ]);
+    }
+}

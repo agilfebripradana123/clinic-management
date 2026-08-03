@@ -1,0 +1,34 @@
+# ====== File sensitif - JANGAN di-commit ======
+.env
+.env.*
+!.env.example
+
+# ====== Dependensi ======
+node_modules/
+vendor/
+
+# ====== Database lokal ======
+*.sqlite
+*.sqlite-journal
+
+# ====== Log & cache ======
+*.log
+storage/logs/*.log
+bootstrap/cache/*.php
+
+# ====== Build artifact ======
+/dist
+/dist-ssr
+/public/build
+/public/hot
+/public/storage
+
+# ====== Editor / OS ======
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# ====== Lainnya ======
+*.cache
+.phpunit.cache
