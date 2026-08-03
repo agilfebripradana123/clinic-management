@@ -1,12 +1,12 @@
 import Dashboard from "../pages/doctor/Dashboard";
-import SchedulesPage from "../pages/schedules/SchedulesPage";
-import ScheduleFormPage from "../pages/schedules/ScheduleFormPage";
-import ScheduleDetailPage from "../pages/schedules/ScheduleDetailPage";
-import PatientsPage from "../pages/patients/PatientsPage";
-import PatientDetailPage from "../pages/patients/PatientDetailPage";
-import MedicalRecordsPage from "../pages/medical-records/MedicalRecordsPage";
-import MedicalRecordFormPage from "../pages/medical-records/MedicalRecordFormPage";
-import MedicalRecordDetailPage from "../pages/medical-records/MedicalRecordDetailPage";
+import SchedulesPage from "../pages/doctor/schedules/SchedulesPage";
+import ScheduleFormPage from "../pages/doctor/schedules/ScheduleFormPage";
+import ScheduleDetailPage from "../pages/doctor/schedules/ScheduleDetailPage";
+import PatientsPage from "../pages/doctor/patients/PatientsPage";
+import PatientDetailPage from "../pages/doctor/patients/PatientDetailPage";
+import MedicalRecordsPage from "../pages/doctor/medical-records/MedicalRecordsPage";
+import MedicalRecordFormPage from "../pages/doctor/medical-records/MedicalRecordFormPage";
+import MedicalRecordDetailPage from "../pages/doctor/medical-records/MedicalRecordDetailPage";
 
 // Definisi rute khusus role doctor.
 // Path relatif terhadap <ProtectedRoute roles={["doctor"]} />.

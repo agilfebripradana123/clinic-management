@@ -12,12 +12,28 @@ class ScheduleController extends Controller
     /**
      * Display a listing of schedules.
      */
-    public function index()
+    public function index(Request $request)
     {
+        $query = Schedule::with('doctor.user')->latest();
+
+        if ($search = $request->query('search')) {
+            $query->where('day', 'like', "%{$search}%");
+        }
+
+        if ($request->has('doctor_id')) {
+            $query->where('doctor_id', $request->integer('doctor_id'));
+        }
+
+        if ($request->has('day')) {
+            $query->where('day', $request->query('day'));
+        }
+
+        if ($request->has('is_active')) {
+            $query->where('is_active', $request->boolean('is_active'));
+        }
+
         return response()->json(
-            Schedule::with('doctor.user')
-                ->latest()
-                ->get()
+            $query->paginate($request->integer('per_page', 10))
         );
     }
 

@@ -1,4 +1,4 @@
-import api from "./api";
+import api, { buildQuery } from "./api";
 import { formatDate } from "../utils/format";
 const fallbackRecords = [
   {
@@ -61,15 +61,24 @@ const mapPayload = (payload) => ({
   notes: payload.notes,
 });
 
-export const getMedicalRecords = async () => {
+export const getMedicalRecords = async (params = {}) => {
   try {
-    const response = await api.get("/medical-records");
+    const response = await api.get(`/medical-records${buildQuery(params)}`);
+    const body = response.data;
 
-    return normalizeList(response.data).map((item) => normalizeRecord(item));
+    return {
+      data: normalizeList(body.data ?? body).map((item) => normalizeRecord(item)),
+      total: body.meta?.total ?? (Array.isArray(body) ? body.length : 0),
+      lastPage: body.meta?.last_page ?? 1,
+    };
   } catch (error) {
     console.warn("Medical Records fallback", error);
 
-    return fallbackRecords;
+    return {
+      data: fallbackRecords,
+      total: fallbackRecords.length,
+      lastPage: 1,
+    };
   }
 };
 
@@ -89,8 +98,8 @@ export const getMedicalRecord = async (id) => {
 };
 
 export const getMedicalRecordCount = async () => {
-  const data = await getMedicalRecords();
-  return data.length;
+  const { total } = await getMedicalRecords({ per_page: 1 });
+  return total;
 };
 
 export const createMedicalRecord = async (payload) => {

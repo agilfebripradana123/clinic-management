@@ -1,4 +1,4 @@
-import api from "./api";
+import api, { buildQuery } from "./api";
 
 const fallbackDoctors = [
   {
@@ -72,17 +72,24 @@ const mapDoctorPayload = (payload) => ({
   is_active: payload.is_active,
 });
 
-export const getDoctors = async () => {
+export const getDoctors = async (params = {}) => {
   try {
-    const response = await api.get("/doctors");
+    const response = await api.get(`/doctors${buildQuery(params)}`);
+    const body = response.data;
 
-    return normalizeList(response.data).map((doctor) =>
-      normalizeRecord(doctor),
-    );
+    return {
+      data: normalizeList(body.data ?? body).map(normalizeRecord),
+      total: body.meta?.total ?? (Array.isArray(body) ? body.length : 0),
+      lastPage: body.meta?.last_page ?? 1,
+    };
   } catch (error) {
     console.warn("Doctors endpoint unavailable, using fallback.", error);
 
-    return fallbackDoctors;
+    return {
+      data: fallbackDoctors,
+      total: fallbackDoctors.length,
+      lastPage: 1,
+    };
   }
 };
 
@@ -102,8 +109,8 @@ export const getDoctor = async (id) => {
 };
 
 export const getDoctorCount = async () => {
-  const doctors = await getDoctors();
-  return doctors.length;
+  const { total } = await getDoctors({ per_page: 1 });
+  return total;
 };
 
 export const createDoctor = async (payload) => {

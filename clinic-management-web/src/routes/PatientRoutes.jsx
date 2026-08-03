@@ -1,10 +1,10 @@
 import Dashboard from "../pages/patient/Dashboard";
-import DoctorsPage from "../pages/doctors/DoctorsPage";
-import BookingsPage from "../pages/bookings/BookingsPage";
-import BookingFormPage from "../pages/bookings/BookingFormPage";
-import BookingDetailPage from "../pages/bookings/BookingDetailPage";
-import MedicalRecordsPage from "../pages/medical-records/MedicalRecordsPage";
-import MedicalRecordDetailPage from "../pages/medical-records/MedicalRecordDetailPage";
+import DoctorsPage from "../pages/patient/doctors/DoctorsPage";
+import BookingsPage from "../pages/patient/bookings/BookingsPage";
+import BookingFormPage from "../pages/patient/bookings/BookingFormPage";
+import BookingDetailPage from "../pages/patient/bookings/BookingDetailPage";
+import MedicalRecordsPage from "../pages/patient/medical-records/MedicalRecordsPage";
+import MedicalRecordDetailPage from "../pages/patient/medical-records/MedicalRecordDetailPage";
 
 // Definisi rute khusus role patient.
 // Path relatif terhadap <ProtectedRoute roles={["patient"]} />.

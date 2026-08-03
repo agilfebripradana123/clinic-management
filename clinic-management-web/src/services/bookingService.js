@@ -1,4 +1,4 @@
-import api from "./api";
+import api, { buildQuery } from "./api";
 import { formatDate } from "../utils/format";
 
 const fallbackBookings = [];
@@ -66,15 +66,24 @@ const mapBookingPayload = (payload) => ({
   notes: payload.notes,
 });
 
-export const getBookings = async () => {
+export const getBookings = async (params = {}) => {
   try {
-    const response = await api.get("/bookings");
+    const response = await api.get(`/bookings${buildQuery(params)}`);
+    const body = response.data;
 
-    return normalizeList(response.data).map(normalizeRecord);
+    return {
+      data: normalizeList(body.data ?? body).map(normalizeRecord),
+      total: body.meta?.total ?? (Array.isArray(body) ? body.length : 0),
+      lastPage: body.meta?.last_page ?? 1,
+    };
   } catch (error) {
     console.warn("Booking endpoint unavailable.", error);
 
-    return fallbackBookings;
+    return {
+      data: fallbackBookings,
+      total: 0,
+      lastPage: 1,
+    };
   }
 };
 
@@ -104,8 +113,8 @@ export const deleteBooking = async (id) => {
 
 export const getBookingCount = async () => {
   try {
-    const bookings = await getBookings();
-    return bookings.length;
+    const { total } = await getBookings({ per_page: 1 });
+    return total;
   } catch (error) {
     console.error(error);
     return 0;

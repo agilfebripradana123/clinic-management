@@ -24,15 +24,42 @@ class MedicalRecordController extends Controller
 
         return response()->json($bookings);
     }
-    public function index()
+    public function index(Request $request)
     {
-        $records = MedicalRecord::with([
+        $query = MedicalRecord::with([
             'booking.patient.user',
             'booking.doctor.user',
             'booking.schedule',
-        ])->latest()->get();
+        ])->latest();
 
-        return response()->json($records);
+        if ($request->has('doctor_id')) {
+            $query->whereHas('booking', function ($bq) use ($request) {
+                $bq->where('doctor_id', $request->integer('doctor_id'));
+            });
+        }
+
+        if ($request->has('patient_id')) {
+            $query->whereHas('booking', function ($bq) use ($request) {
+                $bq->where('patient_id', $request->integer('patient_id'));
+            });
+        }
+
+        if ($search = $request->query('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('diagnosis', 'like', "%{$search}%")
+                    ->orWhere('complaint', 'like', "%{$search}%")
+                    ->orWhereHas('booking', function ($bq) use ($search) {
+                        $bq->where('booking_code', 'like', "%{$search}%")
+                            ->orWhereHas('patient.user', function ($pq) use ($search) {
+                                $pq->where('name', 'like', "%{$search}%");
+                            });
+                    });
+            });
+        }
+
+        return response()->json(
+            $query->paginate($request->integer('per_page', 10))
+        );
     }
 
     public function store(Request $request)

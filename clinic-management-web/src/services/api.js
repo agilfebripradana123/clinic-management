@@ -1,5 +1,18 @@
 import axios from "axios";
 
+// Susun query string dari params, abaikan nilai kosong/null/undefined.
+export const buildQuery = (params = {}) => {
+  const qs = Object.entries(params)
+    .filter(([, value]) => value !== undefined && value !== null && value !== "")
+    .map(
+      ([key, value]) =>
+        `${encodeURIComponent(key)}=${encodeURIComponent(value)}`,
+    )
+    .join("&");
+
+  return qs ? `?${qs}` : "";
+};
+
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
   headers: {

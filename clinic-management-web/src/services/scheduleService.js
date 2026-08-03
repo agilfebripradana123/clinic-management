@@ -1,4 +1,4 @@
-import api from "./api";
+import api, { buildQuery } from "./api";
 
 const fallbackSchedules = [
   {
@@ -67,18 +67,27 @@ const mapSchedulePayload = (payload) => ({
   is_active: payload.is_active,
 });
 
-export const getSchedules = async () => {
+export const getSchedules = async (params = {}) => {
   try {
-    const response = await api.get("/schedules");
+    const response = await api.get(`/schedules${buildQuery(params)}`);
+    const body = response.data;
 
-    return normalizeList(response.data).map(normalizeRecord);
+    return {
+      data: normalizeList(body.data ?? body).map(normalizeRecord),
+      total: body.meta?.total ?? (Array.isArray(body) ? body.length : 0),
+      lastPage: body.meta?.last_page ?? 1,
+    };
   } catch (error) {
     console.warn(
       "Schedules endpoint unavailable, using fallback.",
       error
     );
 
-    return fallbackSchedules;
+    return {
+      data: fallbackSchedules,
+      total: fallbackSchedules.length,
+      lastPage: 1,
+    };
   }
 };
 
@@ -127,8 +136,8 @@ export const deleteSchedule = async (id) => {
 
 export const getScheduleCount = async () => {
   try {
-    const schedules = await getSchedules();
-    return schedules.length;
+    const { total } = await getSchedules({ per_page: 1 });
+    return total;
   } catch (error) {
     console.error(error);
     return 0;

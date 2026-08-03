@@ -12,17 +12,46 @@ class BookingController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $bookings = Booking::with([
+        $query = Booking::with([
             'doctor.user',
             'patient.user',
-            'schedule'
-        ])
-            ->latest()
-            ->get();
+            'schedule',
+        ])->latest();
 
-        return response()->json($bookings);
+        if ($search = $request->query('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('booking_code', 'like', "%{$search}%")
+                    ->orWhere('status', 'like', "%{$search}%")
+                    ->orWhereHas('patient.user', function ($pq) use ($search) {
+                        $pq->where('name', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('doctor.user', function ($dq) use ($search) {
+                        $dq->where('name', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        if ($request->has('status')) {
+            $query->where('status', $request->query('status'));
+        }
+
+        if ($request->has('doctor_id')) {
+            $query->where('doctor_id', $request->integer('doctor_id'));
+        }
+
+        if ($request->has('patient_id')) {
+            $query->where('patient_id', $request->integer('patient_id'));
+        }
+
+        if ($request->has('booking_date')) {
+            $query->whereDate('booking_date', $request->query('booking_date'));
+        }
+
+        return response()->json(
+            $query->paginate($request->integer('per_page', 10))
+        );
     }
 
     /**

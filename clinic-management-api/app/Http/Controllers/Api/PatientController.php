@@ -11,10 +11,27 @@ use Illuminate\Support\Facades\Hash;
 
 class PatientController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        $query = Patient::with('user')->latest();
+
+        if ($search = $request->query('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('medical_record_number', 'like', "%{$search}%")
+                    ->orWhere('phone', 'like', "%{$search}%")
+                    ->orWhereHas('user', function ($uq) use ($search) {
+                        $uq->where('name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        if ($request->has('is_active')) {
+            $query->where('is_active', $request->boolean('is_active'));
+        }
+
         return response()->json(
-            Patient::with('user')->latest()->get()
+            $query->paginate($request->integer('per_page', 10))
         );
     }
 

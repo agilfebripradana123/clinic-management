@@ -1,4 +1,4 @@
-import api from "./api";
+import api, { buildQuery } from "./api";
 
 const endpoint = "/users";
 
@@ -11,12 +11,16 @@ const normalize = (payload = {}) => ({
   updated_at: payload.updated_at,
 });
 
-export async function getUsers() {
-  const { data } = await api.get(endpoint);
+export async function getUsers(params = {}) {
+  const { data } = await api.get(`${endpoint}${buildQuery(params)}`);
 
-  const users = Array.isArray(data?.data) ? data.data : data;
+  const list = Array.isArray(data?.data) ? data.data : data;
 
-  return users.map(normalize);
+  return {
+    data: list.map(normalize),
+    total: data?.meta?.total ?? list.length,
+    lastPage: data?.meta?.last_page ?? 1,
+  };
 }
 
 export async function getUser(id) {

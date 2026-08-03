@@ -17,10 +17,10 @@ class AuthController extends Controller
             'name' => ['required', 'string', 'max:100'],
             'email' => ['required', 'email', 'max:100', 'unique:users,email'],
             'password' => ['required', 'string', 'min:8'],
-            'gender' => ['required', 'in:L,P'],
-            'birth_date' => ['required', 'date'],
-            'phone' => ['required', 'string', 'max:20'],
-            'address' => ['required', 'string', 'max:255'],
+            'gender' => ['nullable', 'in:L,P'],
+            'birth_date' => ['nullable', 'date'],
+            'phone' => ['nullable', 'string', 'max:20'],
+            'address' => ['nullable', 'string', 'max:255'],
         ]);
 
         $user = DB::transaction(function () use ($validated) {
@@ -33,15 +33,15 @@ class AuthController extends Controller
 
             $lastPatientId = Patient::withTrashed()->max('id') ?? 0;
             $nextNumber = (int) $lastPatientId + 1;
-            $medicalRecordNumber = 'RM-' . str_pad((string) $nextNumber, 6, '0', STR_PAD_LEFT);
+            $medicalRecordNumber = 'RM' . str_pad((string) $nextNumber, 6, '0', STR_PAD_LEFT);
 
             Patient::create([
                 'user_id' => $user->id,
                 'medical_record_number' => $medicalRecordNumber,
-                'gender' => $validated['gender'],
-                'birth_date' => $validated['birth_date'],
-                'phone' => $validated['phone'],
-                'address' => $validated['address'],
+                'gender' => $validated['gender'] ?? null,
+                'birth_date' => $validated['birth_date'] ?? null,
+                'phone' => $validated['phone'] ?? null,
+                'address' => $validated['address'] ?? null,
                 'is_active' => true,
             ]);
 

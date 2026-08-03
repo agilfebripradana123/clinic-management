@@ -10,9 +10,28 @@ use Illuminate\Support\Facades\DB;
 
 class DoctorController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        return response()->json(Doctor::with('user')->latest()->get());
+        $query = Doctor::with('user')->latest();
+
+        if ($search = $request->query('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('specialist', 'like', "%{$search}%")
+                    ->orWhere('license_number', 'like', "%{$search}%")
+                    ->orWhereHas('user', function ($uq) use ($search) {
+                        $uq->where('name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        if ($request->has('is_active')) {
+            $query->where('is_active', $request->boolean('is_active'));
+        }
+
+        return response()->json(
+            $query->paginate($request->integer('per_page', 10))
+        );
     }
 
     public function store(Request $request)
