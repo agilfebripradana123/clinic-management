@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 
 import DashboardLayout from "../../../components/layout/DashboardLayout";
 import Card from "../../../components/ui/Card";
@@ -32,9 +32,12 @@ export default function BookingFormPage() {
   const { id } = useParams();
   const roleBase = useRoleBase();
   const { user } = useAuth();
+  const [searchParams] = useSearchParams();
 
   const isEdit = Boolean(id);
   const patientId = user?.patient_id;
+  // Dokter yang dipilih dari halaman daftar dokter (?doctor=1)
+  const preselectedDoctor = searchParams.get("doctor");
 
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(isEdit);
@@ -42,7 +45,10 @@ export default function BookingFormPage() {
   const [doctorOptions, setDoctorOptions] = useState([]);
   const [scheduleOptions, setScheduleOptions] = useState([]);
 
-  const [form, setForm] = useState(defaultForm);
+  const [form, setForm] = useState({
+    ...defaultForm,
+    doctor_id: preselectedDoctor || "",
+  });
   const [savedPatientId, setSavedPatientId] = useState("");
   const [savedStatus, setSavedStatus] = useState("pending");
 

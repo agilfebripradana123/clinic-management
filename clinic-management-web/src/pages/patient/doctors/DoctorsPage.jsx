@@ -112,7 +112,7 @@ export default function DoctorsPage() {
 
               <div className="mt-5">
                 <Link
-                  to={`${roleBase}/bookings/new`}
+                  to={`${roleBase}/bookings/new?doctor=${doctor.id}`}
                   className="inline-flex items-center justify-center gap-2 rounded-xl bg-cyan-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-cyan-600"
                 >
                   <Stethoscope size={16} />
