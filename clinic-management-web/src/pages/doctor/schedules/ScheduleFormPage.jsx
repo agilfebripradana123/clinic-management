@@ -12,9 +12,9 @@ import {
   updateSchedule,
 } from "../../../services/scheduleService";
 
-import { getDoctors } from "../../../services/doctorService";
 import { toast } from "../../../utils/toast";
 import useRoleBase from "../../../hooks/useRoleBase";
+import useAuth from "../../../hooks/useAuth";
 
 const DAYS = [
   "Monday",
@@ -38,33 +38,27 @@ export default function ScheduleFormPage() {
   const navigate = useNavigate();
   const { id } = useParams();
   const roleBase = useRoleBase();
+  const { user } = useAuth();
+  const doctorId = user?.doctor_id;
 
   const isEdit = Boolean(id);
 
   const [form, setForm] = useState(defaultForm);
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(isEdit);
-  const [doctors, setDoctors] = useState([]);
 
+  // Saat tambah baru, doctor_id otomatis ke dokter yang sedang login.
   useEffect(() => {
-    loadDoctors();
+    if (!isEdit && doctorId) {
+      setForm((prev) => ({ ...prev, doctor_id: doctorId }));
+    }
 
     if (isEdit) {
       loadSchedule();
     } else {
       setLoadingData(false);
     }
-  }, [id, isEdit]);
-
-  async function loadDoctors() {
-    try {
-      const data = await getDoctors();
-      setDoctors(data.data);
-    } catch (error) {
-      console.error(error);
-      toast.error("Gagal memuat data dokter.");
-    }
-  }
+  }, [id, isEdit, doctorId]);
 
   async function loadSchedule() {
     try {
@@ -140,22 +134,11 @@ export default function ScheduleFormPage() {
           <div>
             <label className="mb-2 block text-sm font-medium">Dokter</label>
 
-            <select
-              name="doctor_id"
-              value={form.doctor_id}
-              onChange={handleChange}
-              className="w-full rounded-xl border border-slate-300 px-4 py-3"
-              required
-            >
-              <option value="">Pilih Dokter</option>
-
-              {doctors.map((doctor) => (
-                <option key={doctor.id} value={doctor.id}>
-                  {doctor.name}
-                  {doctor.specialist ? ` - ${doctor.specialist}` : ""}
-                </option>
-              ))}
-            </select>
+            <input
+              value={user?.name || "Dokter"}
+              disabled
+              className="w-full rounded-xl border border-slate-300 bg-slate-100 px-4 py-3"
+            />
           </div>
 
           <div>

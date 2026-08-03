@@ -13,19 +13,17 @@ import {
 } from "../../../services/bookingService";
 
 import { getDoctors } from "../../../services/doctorService";
-import { getPatients } from "../../../services/patientService";
 import { getSchedules } from "../../../services/scheduleService";
 
 import { toast } from "../../../utils/toast";
 import { DAY_LABELS } from "../../../utils/day";
 import useRoleBase from "../../../hooks/useRoleBase";
+import useAuth from "../../../hooks/useAuth";
 
 const defaultForm = {
   doctor_id: "",
-  patient_id: "",
   schedule_id: "",
   booking_date: "",
-  status: "pending",
   notes: "",
 };
 
@@ -33,29 +31,30 @@ export default function BookingFormPage() {
   const navigate = useNavigate();
   const { id } = useParams();
   const roleBase = useRoleBase();
+  const { user } = useAuth();
 
   const isEdit = Boolean(id);
+  const patientId = user?.patient_id;
 
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(isEdit);
 
   const [doctorOptions, setDoctorOptions] = useState([]);
-  const [patientOptions, setPatientOptions] = useState([]);
   const [scheduleOptions, setScheduleOptions] = useState([]);
 
   const [form, setForm] = useState(defaultForm);
+  const [savedPatientId, setSavedPatientId] = useState("");
+  const [savedStatus, setSavedStatus] = useState("pending");
 
   useEffect(() => {
     async function loadMasterData() {
       try {
-        const [doctors, patients, schedules] = await Promise.all([
+        const [doctors, schedules] = await Promise.all([
           getDoctors(),
-          getPatients(),
           getSchedules(),
         ]);
 
         setDoctorOptions(doctors.data);
-        setPatientOptions(patients.data);
         setScheduleOptions(schedules.data);
       } catch (error) {
         console.error(error);
@@ -77,12 +76,14 @@ export default function BookingFormPage() {
 
         setForm({
           doctor_id: booking.doctor_id ?? "",
-          patient_id: booking.patient_id ?? "",
           schedule_id: booking.schedule_id ?? "",
           booking_date: booking.booking_date ?? "",
-          status: booking.status ?? "pending",
           notes: booking.notes ?? "",
         });
+
+        // Simpan pasien & status asli agar tidak berubah saat edit.
+        setSavedPatientId(booking.patient_id ?? "");
+        setSavedStatus(booking.status ?? "pending");
       } catch (error) {
         console.error(error);
       } finally {
@@ -131,12 +132,13 @@ export default function BookingFormPage() {
     try {
       setLoading(true);
 
+      // Pasien selalu booking untuk dirinya sendiri, status awal pending.
       const payload = {
         doctor_id: Number(form.doctor_id),
-        patient_id: Number(form.patient_id),
+        patient_id: isEdit ? Number(savedPatientId) : Number(patientId),
         schedule_id: Number(form.schedule_id),
         booking_date: form.booking_date,
-        status: form.status,
+        status: isEdit ? savedStatus : "pending",
         notes: form.notes,
       };
 
@@ -178,20 +180,11 @@ export default function BookingFormPage() {
                   Pasien
                 </label>
 
-                <select
-                  value={form.patient_id}
-                  onChange={handleChange("patient_id")}
-                  className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-cyan-500"
-                  required
-                >
-                  <option value="">Pilih Pasien</option>
-
-                  {patientOptions.map((patient) => (
-                    <option key={patient.id} value={patient.id}>
-                      {patient.name}
-                    </option>
-                  ))}
-                </select>
+                <input
+                  value={user?.name || "Pasien"}
+                  disabled
+                  className="w-full rounded-2xl border border-slate-200 bg-slate-100 px-4 py-3 outline-none"
+                />
               </div>
 
               <div>
@@ -256,19 +249,11 @@ export default function BookingFormPage() {
                   Status
                 </label>
 
-                <select
-                  value={form.status}
-                  onChange={handleChange("status")}
-                  className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-cyan-500"
-                >
-                  <option value="pending">Menunggu</option>
-
-                  <option value="confirmed">Dikonfirmasi</option>
-
-                  <option value="completed">Selesai</option>
-
-                  <option value="cancelled">Dibatalkan</option>
-                </select>
+                <input
+                  value={isEdit ? (savedStatus === "pending" ? "Menunggu" : savedStatus) : "Menunggu"}
+                  disabled
+                  className="w-full rounded-2xl border border-slate-200 bg-slate-100 px-4 py-3 outline-none"
+                />
               </div>
 
               <div className="md:col-span-2">

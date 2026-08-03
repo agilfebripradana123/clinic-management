@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Eye, Pencil, Search } from "lucide-react";
+import { Eye, Pencil, Plus, Search } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import DashboardLayout from "../../../components/layout/DashboardLayout";
@@ -75,6 +75,14 @@ export default function SchedulesPage() {
             icon={Search}
           />
         </div>
+
+        <Link
+          to={`${roleBase}/schedules/new`}
+          className="inline-flex items-center justify-center gap-2 rounded-2xl bg-cyan-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-cyan-600"
+        >
+          <Plus size={16} />
+          Tambah Jadwal
+        </Link>
       </div>
 
       {/* Card grid */}
