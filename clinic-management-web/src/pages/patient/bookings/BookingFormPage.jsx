@@ -100,6 +100,14 @@ export default function BookingFormPage() {
     loadBooking();
   }, [id, isEdit]);
 
+  const selectedDoctor = useMemo(
+    () =>
+      doctorOptions.find(
+        (doctor) => Number(doctor.id) === Number(form.doctor_id),
+      ) || null,
+    [doctorOptions, form.doctor_id],
+  );
+
   const filteredSchedules = useMemo(() => {
     if (!form.doctor_id) return [];
 
@@ -198,20 +206,28 @@ export default function BookingFormPage() {
                   Dokter
                 </label>
 
-                <select
-                  value={form.doctor_id}
-                  onChange={handleChange("doctor_id")}
-                  className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-cyan-500"
-                  required
-                >
-                  <option value="">Pilih Dokter</option>
+                {selectedDoctor ? (
+                  <input
+                    value={`${selectedDoctor.name} • ${selectedDoctor.specialist || ""}`}
+                    disabled
+                    className="w-full rounded-2xl border border-slate-200 bg-slate-100 px-4 py-3 outline-none"
+                  />
+                ) : (
+                  <select
+                    value={form.doctor_id}
+                    onChange={handleChange("doctor_id")}
+                    className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-cyan-500"
+                    required
+                  >
+                    <option value="">Pilih Dokter</option>
 
-                  {doctorOptions.map((doctor) => (
-                    <option key={doctor.id} value={doctor.id}>
-                      {doctor.name} • {doctor.specialist}
-                    </option>
-                  ))}
-                </select>
+                    {doctorOptions.map((doctor) => (
+                      <option key={doctor.id} value={doctor.id}>
+                        {doctor.name} • {doctor.specialist}
+                      </option>
+                    ))}
+                  </select>
+                )}
               </div>
 
               <div className="md:col-span-2">
