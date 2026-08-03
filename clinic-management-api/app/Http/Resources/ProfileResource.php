@@ -15,6 +15,8 @@ class ProfileResource extends JsonResource
             'name' => $this->name,
             'email' => $this->email,
             'role' => $this->role,
+            'doctor_id' => $this->doctor?->id,
+            'patient_id' => $this->patient?->id,
             'photo' => $this->photo
                 ? Storage::url($this->photo)
                 : ($this->doctor?->photo

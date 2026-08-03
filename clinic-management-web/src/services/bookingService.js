@@ -111,6 +111,13 @@ export const deleteBooking = async (id) => {
   return response.data;
 };
 
+// Batalkan booking: ubah status menjadi cancelled.
+export const cancelBooking = async (id) => {
+  const response = await api.put(`/bookings/${id}`, { status: "cancelled" });
+
+  return response.data;
+};
+
 export const getBookingCount = async () => {
   try {
     const { total } = await getBookings({ per_page: 1 });

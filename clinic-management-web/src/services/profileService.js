@@ -16,6 +16,8 @@ const normalizeProfile = (payload) => {
     medical_record_number: profile?.medical_record_number ?? "",
     gender: profile?.gender ?? "",
     birth_date: profile?.birth_date ?? "",
+    doctor_id: profile?.doctor_id ?? null,
+    patient_id: profile?.patient_id ?? null,
     created_at: profile?.created_at ?? "",
   };
 };
