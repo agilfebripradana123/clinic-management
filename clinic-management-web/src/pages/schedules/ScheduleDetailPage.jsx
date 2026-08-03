@@ -16,10 +16,12 @@ import Button from "../../components/ui/Button";
 
 import { getSchedule } from "../../services/scheduleService";
 import { toast } from "../../utils/toast";
+import useRoleBase from "../../hooks/useRoleBase";
 
 export default function ScheduleDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const roleBase = useRoleBase();
 
   const [schedule, setSchedule] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -35,7 +37,7 @@ export default function ScheduleDetailPage() {
     } catch (error) {
       console.error(error);
       toast.error("Gagal memuat detail jadwal.");
-      navigate("/schedules");
+      navigate(`${roleBase}/schedules`);
     } finally {
       setLoading(false);
     }
@@ -111,7 +113,7 @@ export default function ScheduleDetailPage() {
 
         {/* Footer */}
         <div className="mt-8 flex justify-end border-t pt-6">
-          <Button variant="secondary" onClick={() => navigate("/schedules")}>
+          <Button variant="secondary" onClick={() => navigate(`${roleBase}/schedules`)}>
             <ArrowLeft size={18} />
             Kembali
           </Button>

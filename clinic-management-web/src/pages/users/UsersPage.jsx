@@ -15,8 +15,10 @@ import { toast } from "../../utils/toast";
 import { confirmDelete } from "../../utils/confirm";
 
 import { formatDate } from "../../utils/format";
+import useRoleBase from "../../hooks/useRoleBase";
 
 export default function UsersPage() {
+  const roleBase = useRoleBase();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [keyword, setKeyword] = useState("");
@@ -136,7 +138,7 @@ export default function UsersPage() {
           </Input>
         </div>
 
-        <Link to="/users/new">
+        <Link to={`${roleBase}/users/new`}>
           <Button fullWidth={false} icon={Plus}>
             Tambah Admin
           </Button>
@@ -203,14 +205,14 @@ export default function UsersPage() {
                     <td className="px-6 py-4">
                       <div className="flex justify-center gap-2">
                         <Link
-                          to={`/users/${user.id}`}
+                          to={`${roleBase}/users/${user.id}`}
                           className="rounded-xl bg-slate-900 p-2.5 text-white transition hover:opacity-90"
                         >
                           <Eye size={16} />
                         </Link>
 
                         <Link
-                          to={`/users/${user.id}/edit`}
+                          to={`${roleBase}/users/${user.id}/edit`}
                           className="rounded-xl bg-emerald-500 p-2.5 text-white transition hover:opacity-90"
                         >
                           <Pencil size={16} />

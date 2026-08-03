@@ -1,9 +1,16 @@
 import { Navigate, Outlet } from "react-router-dom";
+
 import useAuth from "../hooks/useAuth";
 
-export default function ProtectedRoute({ allowedRoles = [] }) {
+const HOME_BY_ROLE = {
+  admin: "/admin/dashboard",
+  doctor: "/doctor/dashboard",
+  patient: "/patient/dashboard",
+};
+
+export default function ProtectedRoute({ roles = [] }) {
   const { loading, isAuthenticated, user } = useAuth();
-  const role = user?.role?.toLowerCase() || "admin";
+  const role = user?.role?.toLowerCase() || "";
 
   // Tunggu proses restore session selesai
   if (loading) {
@@ -14,16 +21,15 @@ export default function ProtectedRoute({ allowedRoles = [] }) {
     );
   }
 
-  // Belum login
+  // Belum login → arahkan ke halaman login
   if (!isAuthenticated) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/login" replace />;
   }
 
-  // Jika route memiliki pembatasan role, cek hak akses
-  if (allowedRoles.length > 0 && !allowedRoles.includes(role)) {
-    return <Navigate to={`/dashboard/${role}`} replace />;
+  // Role tidak berhak membuka route ini → arahkan ke dashboard miliknya
+  if (roles.length > 0 && !roles.includes(role)) {
+    return <Navigate to={HOME_BY_ROLE[role] || "/login"} replace />;
   }
 
-  // Sudah login
   return <Outlet />;
 }

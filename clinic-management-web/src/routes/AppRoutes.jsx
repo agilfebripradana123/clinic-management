@@ -3,92 +3,82 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Login from "../pages/auth/Login";
 import RegisterPage from "../pages/auth/RegisterPage";
 import ForgotPasswordPage from "../pages/auth/ForgotPasswordPage";
-import Dashboard from "../pages/dashboard/Dashboard";
-import DoctorsPage from "../pages/doctors/DoctorsPage";
-import DoctorFormPage from "../pages/doctors/DoctorFormPage";
-import DoctorDetailPage from "../pages/doctors/DoctorDetailPage";
-import PatientsPage from "../pages/patients/PatientsPage";
-import PatientFormPage from "../pages/patients/PatientFormPage";
-import PatientDetailPage from "../pages/patients/PatientDetailPage";
-import SchedulesPage from "../pages/schedules/SchedulesPage";
-import ScheduleDetailPage from "../pages/schedules/ScheduleDetailPage";
-import ScheduleFormPage from "../pages/schedules/ScheduleFormPage";
-import BookingsPage from "../pages/bookings/BookingsPage";
-import BookingFormPage from "../pages/bookings/BookingFormPage";
-import BookingDetailPage from "../pages/bookings/BookingDetailPage";
-import MedicalRecordsPage from "../pages/medical-records/MedicalRecordsPage";
-import MedicalRecordFormPage from "../pages/medical-records/MedicalRecordFormPage";
-import MedicalRecordDetailPage from "../pages/medical-records/MedicalRecordDetailPage";
-import UsersPage from "../pages/users/UsersPage";
-import UserFormPage from "../pages/users/UserFormPage";
-import UserDetailPage from "../pages/users/UserDetailPage";
-import ReportsPage from "../pages/reports/ReportsPage";
 import ProfilePage from "../pages/profile/ProfilePage";
+
 import ProtectedRoute from "./ProtectedRoute";
+import adminRoutes from "./AdminRoutes";
+import doctorRoutes from "./DoctorRoutes";
+import patientRoutes from "./PatientRoutes";
+
+import useAuth from "../hooks/useAuth";
+
+// Arahkan "/" ke dashboard milik role yang sedang login.
+function HomeRedirect() {
+  const { loading, isAuthenticated, user } = useAuth();
+  const role = user?.role?.toLowerCase();
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#f8fafc]">
+        <div className="h-12 w-12 animate-spin rounded-full border-4 border-[#00d0ff] border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  const homeByRole = {
+    admin: "/admin/dashboard",
+    doctor: "/doctor/dashboard",
+    patient: "/patient/dashboard",
+  };
+
+  return <Navigate to={homeByRole[role] || "/login"} replace />;
+}
+
+// Render array konfigurasi rute menjadi elemen <Route>.
+function renderRouteArray(routes) {
+  return routes.map((route) => (
+    <Route key={route.path} path={route.path} element={route.element} />
+  ));
+}
 
 export default function AppRoutes() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Navigate to="/login" replace />} />
+        {/* Root → redirect sesuai role */}
+        <Route path="/" element={<HomeRedirect />} />
 
+        {/* Auth publik */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
 
-        <Route element={<ProtectedRoute />}>
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/dashboard/admin" element={<Dashboard />} />
-          <Route path="/dashboard/doctor" element={<Dashboard />} />
-          <Route path="/dashboard/patient" element={<Dashboard />} />
-          <Route path="/profile" element={<ProfilePage />} />
-          <Route path="/bookings" element={<BookingsPage />} />
-          <Route path="/bookings/new" element={<BookingFormPage />} />
-          <Route path="/bookings/:id" element={<BookingDetailPage />} />
-          <Route path="/bookings/:id/edit" element={<BookingFormPage />} />
-          <Route path="/medical-records" element={<MedicalRecordsPage />} />
-          <Route
-            path="/medical-records/new"
-            element={<MedicalRecordFormPage />}
-          />
-          <Route
-            path="/medical-records/:id"
-            element={<MedicalRecordDetailPage />}
-          />
-          <Route
-            path="/medical-records/:id/edit"
-            element={<MedicalRecordFormPage />}
-          />
+        {/* Profil: semua role yang login bisa akses */}
+        <Route element={<ProtectedRoute roles={["admin", "doctor", "patient"]} />}>
+          <Route path="profile" element={<ProfilePage />} />
         </Route>
 
-        <Route element={<ProtectedRoute allowedRoles={["admin", "doctor"]} />}>
-          <Route path="/patients" element={<PatientsPage />} />
-          <Route path="/patients/:id" element={<PatientDetailPage />} />
-          <Route path="/schedules" element={<SchedulesPage />} />
-          <Route path="/schedules/:id" element={<ScheduleDetailPage />} />
+        {/* Rute khusus ADMIN */}
+        <Route element={<ProtectedRoute roles={["admin"]} />}>
+          {renderRouteArray(adminRoutes)}
         </Route>
 
-        <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
-          <Route path="/doctors" element={<DoctorsPage />} />
-          <Route path="/doctors/new" element={<DoctorFormPage />} />
-          <Route path="/doctors/:id" element={<DoctorDetailPage />} />
-          <Route path="/doctors/:id/edit" element={<DoctorFormPage />} />
-          <Route path="/patients/new" element={<PatientFormPage />} />
-          <Route path="/patients/:id/edit" element={<PatientFormPage />} />
-          <Route path="/schedules/new" element={<ScheduleFormPage />} />
-          <Route path="/schedules/:id/edit" element={<ScheduleFormPage />} />
-          <Route path="/users" element={<UsersPage />} />
-          <Route path="/users/new" element={<UserFormPage />} />
-          <Route path="/users/:id" element={<UserDetailPage />} />
-          <Route path="/users/:id/edit" element={<UserFormPage />} />
-          <Route path="/reports" element={<ReportsPage />} />
+        {/* Rute khusus DOKTER */}
+        <Route element={<ProtectedRoute roles={["doctor"]} />}>
+          {renderRouteArray(doctorRoutes)}
         </Route>
 
-        <Route element={<ProtectedRoute allowedRoles={["patient"]} />}>
-          <Route path="/doctors" element={<DoctorsPage />} />
+        {/* Rute khusus PASIEN */}
+        <Route element={<ProtectedRoute roles={["patient"]} />}>
+          {renderRouteArray(patientRoutes)}
         </Route>
 
-        <Route path="*" element={<Navigate to="/login" replace />} />
+        {/* Tidak ditemukan */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   );

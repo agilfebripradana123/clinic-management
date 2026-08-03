@@ -7,6 +7,7 @@ import Card from "../../components/ui/Card";
 import Input from "../../components/ui/Input";
 import PaginationControls from "../../components/ui/PaginationControls";
 import useAuth from "../../hooks/useAuth";
+import useRoleBase from "../../hooks/useRoleBase";
 
 import { deleteBooking, getBookings } from "../../services/bookingService";
 
@@ -18,6 +19,7 @@ import { formatDate } from "../../utils/format";
 export default function BookingsPage() {
   const { user } = useAuth();
   const role = user?.role?.toLowerCase() || "admin";
+  const roleBase = useRoleBase();
   const doctorId = user?.doctor?.id;
   const patientId = user?.patient?.id;
 
@@ -135,7 +137,7 @@ export default function BookingsPage() {
         </div>
 
         <Link
-          to="/bookings/new"
+          to={`${roleBase}/bookings/new`}
           className="inline-flex items-center gap-2 rounded-2xl bg-cyan-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-cyan-600"
         >
           <Plus size={16} />

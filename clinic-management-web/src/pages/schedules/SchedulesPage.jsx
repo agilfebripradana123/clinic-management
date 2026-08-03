@@ -12,7 +12,10 @@ import { deleteSchedule, getSchedules } from "../../services/scheduleService";
 import { confirmDelete } from "../../utils/confirm";
 import { toast } from "../../utils/toast";
 import { DAY_LABELS } from "../../utils/day";
+import useRoleBase from "../../hooks/useRoleBase";
+
 export default function SchedulesPage() {
+  const roleBase = useRoleBase();
   const [schedules, setSchedules] = useState([]);
   const [loading, setLoading] = useState(true);
   const [keyword, setKeyword] = useState("");
@@ -120,7 +123,7 @@ export default function SchedulesPage() {
         </div>
 
         <Link
-          to="/schedules/new"
+          to={`${roleBase}/schedules/new`}
           className="inline-flex items-center gap-2 rounded-2xl bg-cyan-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-cyan-600"
         >
           <Plus size={16} />
@@ -188,14 +191,14 @@ export default function SchedulesPage() {
 
               <div className="mt-5 flex gap-2">
                 <Link
-                  to={`/schedules/${schedule.id}`}
+                  to={`${roleBase}/schedules/${schedule.id}`}
                   className="inline-flex items-center justify-center rounded-xl bg-slate-900 p-2.5 text-white hover:opacity-90"
                 >
                   <Eye size={16} />
                 </Link>
 
                 <Link
-                  to={`/schedules/${schedule.id}/edit`}
+                  to={`${roleBase}/schedules/${schedule.id}/edit`}
                   className="inline-flex items-center justify-center rounded-xl bg-emerald-500 p-2.5 text-white hover:opacity-90"
                 >
                   <Pencil size={16} />

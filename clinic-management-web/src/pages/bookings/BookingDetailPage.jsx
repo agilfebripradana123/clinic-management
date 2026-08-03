@@ -8,10 +8,12 @@ import Button from "../../components/ui/Button";
 import { getBooking } from "../../services/bookingService";
 import { DAY_LABELS } from "../../utils/day";
 import { formatDate } from "../../utils/format";
+import useRoleBase from "../../hooks/useRoleBase";
 
 export default function BookingDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const roleBase = useRoleBase();
 
   const [booking, setBooking] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -98,14 +100,14 @@ export default function BookingDetailPage() {
 
             <div className="mt-8 flex flex-col gap-3 pt-2 sm:flex-row">
               <Button
-                onClick={() => navigate(`/bookings/${booking.id}/edit`)}
+                onClick={() => navigate(`${roleBase}/bookings/${booking.id}/edit`)}
                 className="w-full sm:w-44"
               >
                 Edit Booking
               </Button>
 
               <button
-                onClick={() => navigate("/bookings")}
+                onClick={() => navigate(`${roleBase}/bookings`)}
                 className="w-full rounded-2xl border border-slate-300 px-4 py-3 font-medium text-slate-700 transition hover:bg-slate-100 sm:w-44"
               >
                 Kembali

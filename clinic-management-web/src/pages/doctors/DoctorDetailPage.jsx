@@ -4,10 +4,12 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import DashboardLayout from "../../components/layout/DashboardLayout";
 import Card from "../../components/ui/Card";
 import { getDoctor } from "../../services/doctorService";
+import useRoleBase from "../../hooks/useRoleBase";
 
 export default function DoctorDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const roleBase = useRoleBase();
   const [doctor, setDoctor] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -102,14 +104,14 @@ export default function DoctorDetailPage() {
               <div className="flex flex-wrap gap-3 pt-2">
                 <button
                   type="button"
-                  onClick={() => navigate(`/doctors/${id}/edit`)}
+                  onClick={() => navigate(`${roleBase}/doctors/${id}/edit`)}
                   className="rounded-2xl bg-cyan-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-cyan-600"
                 >
                   Edit Dokter
                 </button>
 
                 <Link
-                  to="/doctors"
+                  to={`${roleBase}/doctors`}
                   className="rounded-2xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-cyan-300 hover:text-cyan-700"
                 >
                   Kembali

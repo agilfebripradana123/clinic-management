@@ -13,7 +13,15 @@ import { toast } from "../../utils/toast";
 import { confirmDelete } from "../../utils/confirm";
 import { formatDate } from "../../utils/format";
 
+import useAuth from "../../hooks/useAuth";
+import useRoleBase from "../../hooks/useRoleBase";
+
 export default function PatientsPage() {
+  const { user } = useAuth();
+  const role = user?.role?.toLowerCase() || "admin";
+  const roleBase = useRoleBase();
+  const isAdmin = role === "admin";
+
   const [patients, setPatients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [keyword, setKeyword] = useState("");
@@ -121,13 +129,15 @@ export default function PatientsPage() {
           </Input>
         </div>
 
-        <Link
-          to="/patients/new"
-          className="inline-flex items-center gap-2 rounded-2xl bg-cyan-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-cyan-600"
-        >
-          <Plus size={16} />
-          Tambah Pasien
-        </Link>
+        {isAdmin && (
+          <Link
+            to={`${roleBase}/patients/new`}
+            className="inline-flex items-center gap-2 rounded-2xl bg-cyan-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-cyan-600"
+          >
+            <Plus size={16} />
+            Tambah Pasien
+          </Link>
+        )}
       </div>
 
       <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
@@ -209,28 +219,30 @@ export default function PatientsPage() {
               </div>
 
               {/* Action */}
-              <div className="mt-6 flex gap-2">
-                <Link
-                  to={`/patients/${patient.id}`}
-                  className="inline-flex items-center justify-center rounded-xl bg-slate-900 p-2.5 text-white transition hover:opacity-90"
-                >
-                  <Eye size={16} />
-                </Link>
+              {isAdmin && (
+                <div className="mt-6 flex gap-2">
+                  <Link
+                    to={`${roleBase}/patients/${patient.id}`}
+                    className="inline-flex items-center justify-center rounded-xl bg-slate-900 p-2.5 text-white transition hover:opacity-90"
+                  >
+                    <Eye size={16} />
+                  </Link>
 
-                <Link
-                  to={`/patients/${patient.id}/edit`}
-                  className="inline-flex items-center justify-center rounded-xl bg-emerald-500 p-2.5 text-white transition hover:opacity-90"
-                >
-                  <Pencil size={16} />
-                </Link>
+                  <Link
+                    to={`${roleBase}/patients/${patient.id}/edit`}
+                    className="inline-flex items-center justify-center rounded-xl bg-emerald-500 p-2.5 text-white transition hover:opacity-90"
+                  >
+                    <Pencil size={16} />
+                  </Link>
 
-                <button
-                  onClick={() => handleDelete(patient.id)}
-                  className="inline-flex items-center justify-center rounded-xl bg-rose-500 p-2.5 text-white transition hover:opacity-90"
-                >
-                  <Trash2 size={16} />
-                </button>
-              </div>
+                  <button
+                    onClick={() => handleDelete(patient.id)}
+                    className="inline-flex items-center justify-center rounded-xl bg-rose-500 p-2.5 text-white transition hover:opacity-90"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              )}
             </Card>
           ))
         )}

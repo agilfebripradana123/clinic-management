@@ -18,6 +18,7 @@ import { getSchedules } from "../../services/scheduleService";
 
 import { toast } from "../../utils/toast";
 import { DAY_LABELS } from "../../utils/day";
+import useRoleBase from "../../hooks/useRoleBase";
 
 const defaultForm = {
   doctor_id: "",
@@ -31,6 +32,7 @@ const defaultForm = {
 export default function BookingFormPage() {
   const navigate = useNavigate();
   const { id } = useParams();
+  const roleBase = useRoleBase();
 
   const isEdit = Boolean(id);
 
@@ -146,7 +148,7 @@ export default function BookingFormPage() {
         toast.success("Booking berhasil ditambahkan");
       }
 
-      navigate("/bookings");
+      navigate(`${roleBase}/bookings`);
     } catch (error) {
       toast.error(
         error.response?.data?.message ??
@@ -295,7 +297,7 @@ export default function BookingFormPage() {
 
               <button
                 type="button"
-                onClick={() => navigate("/bookings")}
+                onClick={() => navigate(`${roleBase}/bookings`)}
                 className="w-full rounded-2xl border border-slate-300 px-4 py-3 font-medium text-slate-700 transition hover:bg-slate-100 sm:w-44"
               >
                 Batal

@@ -44,7 +44,7 @@ export default function RegisterPage() {
         confirmButtonColor: "#06b6d4",
       });
 
-      navigate("/dashboard/patient");
+      navigate("/patient/dashboard");
     } catch (error) {
       await Swal.fire({
         icon: "error",

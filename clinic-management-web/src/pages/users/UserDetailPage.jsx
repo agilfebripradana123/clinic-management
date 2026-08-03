@@ -10,9 +10,11 @@ import Badge from "../../components/ui/Badge";
 import { getUser } from "../../services/userService";
 import { formatDate } from "../../utils/format";
 import { toast } from "../../utils/toast";
+import useRoleBase from "../../hooks/useRoleBase";
 
 export default function UserDetailPage() {
   const { id } = useParams();
+  const roleBase = useRoleBase();
 
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -120,13 +122,13 @@ export default function UserDetailPage() {
 
         {/* Action */}
         <div className="mt-8 flex flex-wrap justify-end gap-3">
-          <Link to="/users">
+          <Link to={`${roleBase}/users`}>
             <Button variant="secondary" fullWidth={false} icon={ArrowLeft}>
               Kembali
             </Button>
           </Link>
 
-          <Link to={`/users/${user.id}/edit`}>
+          <Link to={`${roleBase}/users/${user.id}/edit`}>
             <Button variant="success" fullWidth={false} icon={Pencil}>
               Edit User
             </Button>

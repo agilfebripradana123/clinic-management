@@ -32,9 +32,9 @@ export default function Login() {
 
       const role = response?.user?.role?.toLowerCase();
       const dashboardByRole = {
-        admin: "/dashboard/admin",
-        doctor: "/dashboard/doctor",
-        patient: "/dashboard/patient",
+        admin: "/admin/dashboard",
+        doctor: "/doctor/dashboard",
+        patient: "/patient/dashboard",
       };
 
       await Swal.fire({
@@ -44,7 +44,7 @@ export default function Login() {
         confirmButtonColor: "#06b6d4",
       });
 
-      navigate(dashboardByRole[role] || "/dashboard");
+      navigate(dashboardByRole[role] || "/login");
     } catch (err) {
       await Swal.fire({
         icon: "error",

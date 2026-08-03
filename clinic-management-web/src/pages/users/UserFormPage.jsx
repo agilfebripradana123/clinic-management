@@ -14,6 +14,7 @@ import {
 } from "../../services/userService";
 
 import { toast } from "../../utils/toast";
+import useRoleBase from "../../hooks/useRoleBase";
 
 const initialForm = {
   name: "",
@@ -24,6 +25,7 @@ const initialForm = {
 export default function UserFormPage() {
   const navigate = useNavigate();
   const { id } = useParams();
+  const roleBase = useRoleBase();
 
   const isEdit = Boolean(id);
 
@@ -77,7 +79,7 @@ export default function UserFormPage() {
         toast.success("User berhasil ditambahkan");
       }
 
-      navigate("/users");
+      navigate(`${roleBase}/users`);
     } catch (error) {
       toast.error(
         error.response?.data?.message ||
@@ -146,7 +148,7 @@ export default function UserFormPage() {
           />
 
           <div className="flex flex-wrap justify-end gap-3 pt-4">
-            <Link to="/users">
+            <Link to={`${roleBase}/users`}>
               <Button
                 type="button"
                 variant="secondary"

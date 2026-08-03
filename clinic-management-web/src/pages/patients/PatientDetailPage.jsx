@@ -5,10 +5,15 @@ import DashboardLayout from "../../components/layout/DashboardLayout";
 import Card from "../../components/ui/Card";
 import { getPatient } from "../../services/patientService";
 import { formatDate } from "../../utils/format";
+import useRoleBase from "../../hooks/useRoleBase";
+import useAuth from "../../hooks/useAuth";
 
 export default function PatientDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const roleBase = useRoleBase();
+  const { user } = useAuth();
+  const isAdmin = user?.role?.toLowerCase() === "admin";
   const [patient, setPatient] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -111,15 +116,17 @@ export default function PatientDetailPage() {
               </div>
 
               <div className="flex flex-wrap gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => navigate(`/patients/${id}/edit`)}
-                  className="rounded-2xl bg-cyan-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-cyan-600"
-                >
-                  Edit Pasien
-                </button>
+                {isAdmin && (
+                  <button
+                    type="button"
+                    onClick={() => navigate(`${roleBase}/patients/${id}/edit`)}
+                    className="rounded-2xl bg-cyan-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-cyan-600"
+                  >
+                    Edit Pasien
+                  </button>
+                )}
                 <Link
-                  to="/patients"
+                  to={`${roleBase}/patients`}
                   className="rounded-2xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-cyan-300 hover:text-cyan-700"
                 >
                   Kembali

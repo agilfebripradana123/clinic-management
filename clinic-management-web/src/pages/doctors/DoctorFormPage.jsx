@@ -11,6 +11,7 @@ import {
   updateDoctor,
 } from "../../services/doctorService";
 import { toast } from "../../utils/toast";
+import useRoleBase from "../../hooks/useRoleBase";
 
 const defaultForm = {
   name: "",
@@ -25,6 +26,7 @@ const defaultForm = {
 export default function DoctorFormPage() {
   const navigate = useNavigate();
   const { id } = useParams();
+  const roleBase = useRoleBase();
   const isEditMode = Boolean(id);
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(isEditMode);
@@ -77,7 +79,7 @@ export default function DoctorFormPage() {
         toast.success(`Dokter ${form.name || "baru"} berhasil disimpan`);
       }
 
-      navigate("/doctors");
+      navigate(`${roleBase}/doctors`);
     } catch (error) {
       console.log(error.response?.data);
 
@@ -163,7 +165,7 @@ export default function DoctorFormPage() {
               </Button>
               <button
                 type="button"
-                onClick={() => navigate("/doctors")}
+                onClick={() => navigate(`${roleBase}/doctors`)}
                 className="w-full rounded-2xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-cyan-300 hover:text-cyan-700 sm:w-44"
               >
                 Batal

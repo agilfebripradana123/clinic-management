@@ -6,10 +6,16 @@ import Card from "../../components/ui/Card";
 
 import { getMedicalRecord } from "../../services/medicalRecordService";
 import { toast } from "../../utils/toast";
+import useRoleBase from "../../hooks/useRoleBase";
+import useAuth from "../../hooks/useAuth";
 
 export default function MedicalRecordDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const roleBase = useRoleBase();
+  const { user } = useAuth();
+  const role = user?.role?.toLowerCase();
+  const canEdit = role === "admin" || role === "doctor";
 
   const [record, setRecord] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -151,16 +157,18 @@ export default function MedicalRecordDetailPage() {
               </div>
 
               <div className="flex flex-wrap gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => navigate(`/medical-records/${id}/edit`)}
-                  className="rounded-2xl bg-cyan-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-cyan-600"
-                >
-                  Edit Rekam Medis
-                </button>
+                {canEdit && (
+                  <button
+                    type="button"
+                    onClick={() => navigate(`${roleBase}/medical-records/${id}/edit`)}
+                    className="rounded-2xl bg-cyan-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-cyan-600"
+                  >
+                    Edit Rekam Medis
+                  </button>
+                )}
 
                 <Link
-                  to="/medical-records"
+                  to={`${roleBase}/medical-records`}
                   className="rounded-2xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-cyan-300 hover:text-cyan-700"
                 >
                   Kembali

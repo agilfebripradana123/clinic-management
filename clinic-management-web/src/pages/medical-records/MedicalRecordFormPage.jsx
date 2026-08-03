@@ -15,6 +15,7 @@ import {
 } from "../../services/medicalRecordService";
 
 import { toast } from "../../utils/toast";
+import useRoleBase from "../../hooks/useRoleBase";
 
 const defaultForm = {
   booking_id: "",
@@ -28,6 +29,7 @@ const defaultForm = {
 export default function MedicalRecordFormPage() {
   const navigate = useNavigate();
   const { id } = useParams();
+  const roleBase = useRoleBase();
 
   const isEditMode = Boolean(id);
 
@@ -106,7 +108,7 @@ export default function MedicalRecordFormPage() {
         toast.success("Rekam medis berhasil ditambahkan");
       }
 
-      navigate("/medical-records");
+      navigate(`${roleBase}/medical-records`);
     } catch (error) {
       toast.error(
         error.response?.data?.message ||
@@ -244,7 +246,7 @@ export default function MedicalRecordFormPage() {
 
               <button
                 type="button"
-                onClick={() => navigate("/medical-records")}
+                onClick={() => navigate(`${roleBase}/medical-records`)}
                 className="w-full rounded-2xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-cyan-300 hover:text-cyan-700 sm:w-44"
               >
                 Batal

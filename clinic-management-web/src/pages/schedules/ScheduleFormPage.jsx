@@ -14,6 +14,7 @@ import {
 
 import { getDoctors } from "../../services/doctorService";
 import { toast } from "../../utils/toast";
+import useRoleBase from "../../hooks/useRoleBase";
 
 const DAYS = [
   "Monday",
@@ -36,6 +37,7 @@ const defaultForm = {
 export default function ScheduleFormPage() {
   const navigate = useNavigate();
   const { id } = useParams();
+  const roleBase = useRoleBase();
 
   const isEdit = Boolean(id);
 
@@ -78,7 +80,7 @@ export default function ScheduleFormPage() {
     } catch (error) {
       console.error(error);
       toast.error("Gagal memuat jadwal.");
-      navigate("/schedules");
+      navigate(`${roleBase}/schedules`);
     } finally {
       setLoadingData(false);
     }
@@ -107,7 +109,7 @@ export default function ScheduleFormPage() {
         toast.success("Jadwal berhasil ditambahkan.");
       }
 
-      navigate("/schedules");
+      navigate(`${roleBase}/schedules`);
     } catch (error) {
       console.error(error);
 
@@ -211,7 +213,7 @@ export default function ScheduleFormPage() {
 
             <button
               type="button"
-              onClick={() => navigate("/schedules")}
+              onClick={() => navigate(`${roleBase}/schedules`)}
               className="w-full rounded-2xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-cyan-300 hover:text-cyan-700 sm:w-44"
             >
               Batal

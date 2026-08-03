@@ -1,0 +1,34 @@
+import Dashboard from "../pages/doctor/Dashboard";
+import SchedulesPage from "../pages/schedules/SchedulesPage";
+import ScheduleFormPage from "../pages/schedules/ScheduleFormPage";
+import ScheduleDetailPage from "../pages/schedules/ScheduleDetailPage";
+import PatientsPage from "../pages/patients/PatientsPage";
+import PatientDetailPage from "../pages/patients/PatientDetailPage";
+import MedicalRecordsPage from "../pages/medical-records/MedicalRecordsPage";
+import MedicalRecordFormPage from "../pages/medical-records/MedicalRecordFormPage";
+import MedicalRecordDetailPage from "../pages/medical-records/MedicalRecordDetailPage";
+
+// Definisi rute khusus role doctor.
+// Path relatif terhadap <ProtectedRoute roles={["doctor"]} />.
+// Dokter: lihat jadwal & kelola jadwal praktik, lihat pasien, kelola rekam medis.
+const doctorRoutes = [
+  { path: "doctor/dashboard", element: <Dashboard /> },
+
+  // Jadwal Praktik
+  { path: "doctor/schedules", element: <SchedulesPage /> },
+  { path: "doctor/schedules/new", element: <ScheduleFormPage /> },
+  { path: "doctor/schedules/:id", element: <ScheduleDetailPage /> },
+  { path: "doctor/schedules/:id/edit", element: <ScheduleFormPage /> },
+
+  // Daftar Pasien
+  { path: "doctor/patients", element: <PatientsPage /> },
+  { path: "doctor/patients/:id", element: <PatientDetailPage /> },
+
+  // Rekam Medis
+  { path: "doctor/medical-records", element: <MedicalRecordsPage /> },
+  { path: "doctor/medical-records/new", element: <MedicalRecordFormPage /> },
+  { path: "doctor/medical-records/:id", element: <MedicalRecordDetailPage /> },
+  { path: "doctor/medical-records/:id/edit", element: <MedicalRecordFormPage /> },
+];
+
+export default doctorRoutes;

@@ -16,7 +16,7 @@ import SidebarItem from "./SidebarItem";
 
 const roleMenus = {
   admin: [
-    { to: "/dashboard", icon: LayoutDashboard, title: "Dashboard" },
+    { to: "/admin/dashboard", icon: LayoutDashboard, title: "Dashboard" },
     { to: "/doctors", icon: Stethoscope, title: "Dokter" },
     { to: "/patients", icon: Users, title: "Pasien" },
     { to: "/schedules", icon: CalendarDays, title: "Jadwal" },
@@ -27,14 +27,14 @@ const roleMenus = {
     { to: "/profile", icon: Shield, title: "Profil" },
   ],
   doctor: [
-    { to: "/dashboard", icon: LayoutDashboard, title: "Dashboard Dokter" },
+    { to: "/doctor/dashboard", icon: LayoutDashboard, title: "Dashboard Dokter" },
     { to: "/schedules", icon: CalendarDays, title: "Jadwal Praktik" },
     { to: "/patients", icon: Users, title: "Daftar Pasien" },
     { to: "/medical-records", icon: FileText, title: "Rekam Medis" },
     { to: "/profile", icon: Shield, title: "Profil" },
   ],
   patient: [
-    { to: "/dashboard", icon: LayoutDashboard, title: "Home" },
+    { to: "/patient/dashboard", icon: LayoutDashboard, title: "Home" },
     { to: "/doctors", icon: Stethoscope, title: "Dokter" },
     { to: "/bookings", icon: ClipboardList, title: "Booking" },
     { to: "/medical-records", icon: Activity, title: "Riwayat" },
@@ -45,7 +45,12 @@ const roleMenus = {
 const Sidebar = () => {
   const { user } = useAuth();
   const role = user?.role?.toLowerCase() || "admin";
-  const items = roleMenus[role] || roleMenus.admin;
+  const base = `/${role}`;
+  const items = (roleMenus[role] || roleMenus.admin).map((item) => ({
+    ...item,
+    // Menu profil tetap global, sisanya diberi prefix role
+    to: item.to === "/profile" ? item.to : `${base}${item.to}`,
+  }));
 
   return (
     <aside className="sticky top-0 flex h-screen w-72 flex-col bg-slate-900 text-white shadow-2xl lg:shadow-none">

@@ -14,8 +14,10 @@ import {
 
 import { toast } from "../../utils/toast";
 import { confirmDelete } from "../../utils/confirm";
+import useRoleBase from "../../hooks/useRoleBase";
 
 export default function MedicalRecordsPage() {
+  const roleBase = useRoleBase();
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(true);
   const [keyword, setKeyword] = useState("");
@@ -132,7 +134,7 @@ export default function MedicalRecordsPage() {
         </div>
 
         <Link
-          to="/medical-records/new"
+          to={`${roleBase}/medical-records/new`}
           className="inline-flex items-center gap-2 rounded-2xl bg-cyan-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-cyan-600"
         >
           <Plus size={16} />
@@ -201,14 +203,14 @@ export default function MedicalRecordsPage() {
               {/* Action */}
               <div className="mt-5 flex gap-2">
                 <Link
-                  to={`/medical-records/${record.id}`}
+                  to={`${roleBase}/medical-records/${record.id}`}
                   className="inline-flex items-center justify-center rounded-xl bg-slate-900 p-2.5 text-white hover:opacity-90"
                 >
                   <Eye size={16} />
                 </Link>
 
                 <Link
-                  to={`/medical-records/${record.id}/edit`}
+                  to={`${roleBase}/medical-records/${record.id}/edit`}
                   className="inline-flex items-center justify-center rounded-xl bg-emerald-500 p-2.5 text-white hover:opacity-90"
                 >
                   <Pencil size={16} />
